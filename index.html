@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="クラサイ最適化" />
-  <title>クラサイ.csv 専用オプティマイザー (墓地利用対応版)</title>
+  <title>クラサイ.csv 専用オプティマイザー (公式日本語名・画像対応)</title>
   <style>
     :root {
       --bg: #090d16;
@@ -410,8 +410,9 @@
       margin-top: 1px;
     }
 
-    .card-main-info { min-width: 0; flex: 1; }
-    .card-jp { font-size: 13px; font-weight: 700; color: #ffffff; word-break: break-word; }
+    .card-main-info { min-width: 0; flex: 1; cursor: pointer; }
+    .card-jp { font-size: 13px; font-weight: 700; color: #ffffff; word-break: break-word; display: flex; align-items: center; gap: 5px; }
+    .card-jp:hover { color: #93c5fd; }
     .card-en { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .deck-item-right {
@@ -432,6 +433,74 @@
       color: #93c5fd;
       font-size: 10.5px;
       font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Modal / Image Viewer */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-backdrop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      position: relative;
+    }
+
+    .modal-card-img {
+      width: 100%;
+      max-height: 440px;
+      object-fit: contain;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      background: #000;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .modal-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .modal-close-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      background: var(--blue);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
       cursor: pointer;
     }
 
@@ -608,7 +677,7 @@
       <div>
         <div class="brand-row">
           <span class="grixis-dots"><span class="dot-u"></span><span class="dot-b"></span><span class="dot-r"></span></span>
-          <span class="header-title">クラサイ.csv 専用構築</span>
+          <span class="header-title">クラサイ.csv 専用構築 (公式名・画像対応)</span>
         </div>
         <div class="header-cost" id="hdrTotalCost">¥9,860</div>
       </div>
@@ -647,13 +716,13 @@
 
       <div class="card">
         <div class="section-title">
-          <span>1. 予算1万円＆墓地利用プリセット</span>
+          <span>1. 構築プラン選択</span>
           <span class="sub-text">実物92枚登録済</span>
         </div>
         <div class="preset-list">
           <button type="button" class="preset-btn selected" data-preset="planA">
             <div>
-              <div class="preset-name">プランA：城塞溶接＆納墓・再活性（推奨）</div>
+              <div class="preset-name">プランA：城塞溶接＆納墓・再活性（王道推奨）</div>
               <div class="preset-desc">プロキシ完全解消＋《納墓》《再活性》《ゴブリンの溶接工》《発掘》《通り抜け》。既存の《ボーラスの城塞》《ビビ》を高速リアニメイト</div>
             </div>
             <span class="preset-price">¥9,860</span>
@@ -708,7 +777,7 @@
     <section id="view-swaps" class="tab-view">
       <div class="card" style="padding:11px 13px;">
         <p class="sub-text">
-          <strong>プロキシ8枠</strong>および<strong>墓地利用・強化調整7枠（計15枠）</strong>を個別にタップして切り替えられます。どの組み合わせを選んでも100枚ハイランダーが維持されます。
+          <strong>プロキシ8枠</strong>および<strong>墓地利用・強化調整7枠（計15枠）</strong>を個別にタップして切り替えられます。カード名をタップすると公式画像を確認できます。
         </p>
       </div>
       <div id="slotsContainer"></div>
@@ -811,6 +880,16 @@
     </section>
   </main>
 
+  <!-- Image Preview Modal -->
+  <div id="cardModal" class="modal-backdrop">
+    <div class="modal-content">
+      <img id="modalImg" src="" alt="Card Image" class="modal-card-img" />
+      <div id="modalTitle" class="modal-title">カード名</div>
+      <div id="modalSubtitle" class="modal-subtitle">English Name</div>
+      <button type="button" id="modalCloseBtn" class="modal-close-btn">閉じる</button>
+    </div>
+  </div>
+
   <nav class="bottom-nav">
     <div class="bottom-nav-inner">
       <button type="button" class="nav-btn active" data-tab="plans">
@@ -837,7 +916,7 @@
 
   <script>
     (function () {
-      // Exact 100 cards from クラサイ.csv (92 owned = proxy:false, 8 proxies = proxy:true)
+      // Exact 100 cards from クラサイ.csv with official correct Japanese names
       const BASE_DECK = [
         // Commanders (2)
         { id: "c1", en: "Krark, the Thumbless", jp: "親指なしのクラーク", cat: "Commanders", mv: 2, jpy: 200 },
@@ -847,7 +926,7 @@
         { id: "cr1", en: "Ragavan, Nimble Pilferer", jp: "敏捷なこそ泥、ラガバン", cat: "Creatures", mv: 1, jpy: 5500, fastMana: true },
         { id: "cr2", en: "Mockingbird", jp: "マネドリ", cat: "Creatures", mv: 1, jpy: 800, engine: true },
         { id: "cr3", en: "Thassa's Oracle", jp: "タッサの神託者", cat: "Creatures", mv: 2, jpy: 2500 },
-        { id: "cr4", en: "Muse Seeker", jp: "Muse Seeker", cat: "Creatures", mv: 2, jpy: 400, engine: true },
+        { id: "cr4", en: "Muse Seeker", jp: "ミューズの探求者", cat: "Creatures", mv: 2, jpy: 400, engine: true },
         { id: "cr5", en: "Tavern Scoundrel", jp: "酒場の悪漢", cat: "Creatures", mv: 2, jpy: 100, engine: true },
         { id: "cr6", en: "Harmonic Prodigy", jp: "調和の神童", cat: "Creatures", mv: 2, jpy: 900, engine: true },
         { id: "cr7", en: "Simian Spirit Guide", jp: "猿人の指導霊", cat: "Creatures", mv: 3, jpy: 400, fastMana: true },
@@ -862,7 +941,7 @@
         // Instants (32)
         { id: "in1", en: "Slaughter Pact", jp: "殺戮の契約", cat: "Instants", mv: 0, jpy: 250 },
         { id: "in2", en: "Pact of Negation", jp: "否定の契約", cat: "Instants", mv: 0, jpy: 1800 },
-        { id: "in3", en: "Demonic Consultation", jp: "Demonic Consultation", cat: "Instants", mv: 1, jpy: 1000, tutor: true },
+        { id: "in3", en: "Demonic Consultation", jp: "悪魔の相談", cat: "Instants", mv: 1, jpy: 1000, tutor: true },
         { id: "in4", en: "Gut Shot", jp: "はらわた撃ち", cat: "Instants", mv: 1, jpy: 700 },
         { id: "in5", en: "Dark Ritual", jp: "暗黒の儀式", cat: "Instants", mv: 1, jpy: 150, fastMana: true },
         { id: "in6", en: "Surgical Extraction", jp: "外科的摘出", cat: "Instants", mv: 1, jpy: 300 },
@@ -875,7 +954,7 @@
         { id: "in13", en: "Red Elemental Blast", jp: "赤霊破", cat: "Instants", mv: 1, jpy: 500, printWarn: "30a" },
         { id: "in14", en: "An Offer You Can't Refuse", jp: "断れない提案", cat: "Instants", mv: 1, jpy: 500 },
         { id: "in15", en: "Flusterstorm", jp: "狼狽の嵐", cat: "Instants", mv: 1, jpy: 700 },
-        { id: "in16", en: "Fork", jp: "Fork", cat: "Instants", mv: 2, jpy: 4500, printWarn: "30a" },
+        { id: "in16", en: "Fork", jp: "フォーク", cat: "Instants", mv: 2, jpy: 4500, printWarn: "30a" },
         { id: "in17", en: "Cabal Ritual", jp: "陰謀団の儀式", cat: "Instants", mv: 2, jpy: 1600, fastMana: true },
         { id: "in18", en: "Tainted Pact", jp: "汚れた契約", cat: "Instants", mv: 2, jpy: 4200, tutor: true },
         { id: "in19", en: "Dramatic Reversal", jp: "劇的な逆転", cat: "Instants", mv: 2, jpy: 200, fastMana: true },
@@ -889,7 +968,7 @@
         { id: "in27", en: "Sink into Stupor", jp: "朦朧への没入", cat: "Instants", mv: 3, jpy: 1200 },
         { id: "in28", en: "Mindbreak Trap", jp: "精神壊しの罠", cat: "Instants", mv: 4, jpy: 1200 },
         { id: "in29", en: "Deadly Rollick", jp: "致命的なはしゃぎ回り", cat: "Instants", mv: 4, jpy: 3800 },
-        { id: "in30", en: "Fury Storm", jp: "Fury Storm", cat: "Instants", mv: 4, jpy: 800 },
+        { id: "in30", en: "Fury Storm", jp: "激怒の嵐", cat: "Instants", mv: 4, jpy: 800 },
         { id: "in31", en: "Force of Will", jp: "意志の力", cat: "Instants", mv: 5, jpy: 11000 },
         { id: "in32", en: "Submerge", jp: "水没", cat: "Instants", mv: 5, jpy: 400 },
 
@@ -954,20 +1033,20 @@
         { id: "la27", en: "Dragonskull Summit", jp: "竜髑髏の山頂", cat: "Lands", mv: 0, jpy: 300, landColors: ["B","R"] }
       ];
 
-      // 15 Customizable Slots (8 Proxies + 7 Graveyard/Upgrade Flex Slots) — 100% collision-free
+      // 15 Customizable Slots with accurate Japanese names
       const SLOT_OPTIONS = {
         ar2: {
           group: "プロキシ解消枠 (8枚)",
           opts: [
             { key: "std", en: "Grinding Station", jp: "研磨基地", cat: "Artifacts", mv: 2, jpy: 1200, gyTag: true,
-              reason: "LED抜きの核。《死の国からの脱出》＋0マナファクト（水蓮の花びら・極楽の外套）で決定論的無限切削＆マナ生成が成立" }
+              reason: "LED抜きの核。《死の国からの脱出》＋0マナファクトで決定論的無限切削＆マナ生成が成立" }
           ]
         },
         ar1: {
           group: "プロキシ解消枠 (8枚)",
           opts: [
             { key: "std", en: "Paradise Mantle", jp: "極楽の外套", cat: "Artifacts", mv: 0, jpy: 800, fastMana: true, zeroArt: true,
-              reason: "既存の《ウルザの物語》第3章から直接サーチ可能。クラークを色マナ源にしつつ《研磨基地》無限ループの0マナ枠も兼任" }
+              reason: "既存の《ウルザの物語》第3章からサーチ可能。クラークを色マナ源にしつつ《研磨基地》無限ループの0マナ枠も兼任" }
           ]
         },
         ar7: {
@@ -1101,9 +1180,8 @@
         Sorceries: "ソーサリー", Artifacts: "アーティファクト", Enchantments: "エンチャント", Lands: "土地"
       };
 
-      const STORAGE_KEY = "saikura_csv_custom_v3";
+      const STORAGE_KEY = "saikura_csv_custom_v4";
 
-      // Default Owned: All 92 non-proxy cards from クラサイ.csv are pre-owned!
       function getDefaultOwned() {
         const map = {};
         BASE_DECK.forEach(c => {
@@ -1114,8 +1192,8 @@
 
       let state = {
         activePreset: "planA",
-        choices: Object.assign({}, PRESETS.planA), // baseId -> option key (or undefined for base card)
-        ownedMap: getDefaultOwned(),               // card key (baseId or en name) -> true
+        choices: Object.assign({}, PRESETS.planA),
+        ownedMap: getDefaultOwned(),
         catFilter: "ALL",
         searchQuery: "",
         stormCount: 0,
@@ -1156,6 +1234,20 @@
         el.classList.add("show");
         clearTimeout(showToast._t);
         showToast._t = setTimeout(() => el.classList.remove("show"), 2100);
+      }
+
+      // Open Card Image Modal using Scryfall image API
+      function openCardModal(enName, jpName) {
+        const encoded = encodeURIComponent(enName);
+        const imageUrl = "https://api.scryfall.com/cards/named?format=image&exact=" + encoded;
+        document.getElementById("modalImg").src = imageUrl;
+        document.getElementById("modalTitle").textContent = jpName;
+        document.getElementById("modalSubtitle").textContent = enName;
+        document.getElementById("cardModal").classList.add("show");
+      }
+
+      function closeCardModal() {
+        document.getElementById("cardModal").classList.remove("show");
       }
 
       function computeDeck() {
@@ -1218,7 +1310,7 @@
               cat: base.cat,
               mv: base.mv,
               jpy: base.jpy,
-              outPocket: 0, // Base cards are either owned or currently proxied unless user unchecks
+              outPocket: 0,
               isRep: false,
               isOwned: isOwned,
               proxy: isProxyActive,
@@ -1246,14 +1338,12 @@
         const res = computeDeck();
         const { finalCards, changedPairs, totalBuyJpy, buyCount, remainingProxies } = res;
 
-        // Non-land MV stats (mean, median, max)
         const nonLands = finalCards.filter(c => c.cat !== "Lands" && c.cat !== "Commanders").map(c => c.mv).sort((a, b) => a - b);
         const avgMv = nonLands.reduce((s, v) => s + v, 0) / nonLands.length;
         const mid = Math.floor(nonLands.length / 2);
         const medianMv = nonLands.length % 2 !== 0 ? nonLands[mid] : (nonLands[mid - 1] + nonLands[mid]) / 2;
         const maxMv = nonLands[nonLands.length - 1] || 0;
 
-        // Land colors
         const lands = finalCards.filter(c => c.cat === "Lands");
         let u = 0, b = 0, r = 0;
         lands.forEach(l => {
@@ -1266,7 +1356,6 @@
         const uniq = new Set(finalCards.map(c => c.en));
         const singletonOk = uniq.size === 100;
 
-        // Top Bar
         document.getElementById("hdrTotalCost").textContent = fmtYen(totalBuyJpy);
         const proxyPill = document.getElementById("hdrProxyPill");
         if (remainingProxies === 0) {
@@ -1279,7 +1368,6 @@
         document.getElementById("hdrSwapPill").textContent = "入替 " + changedPairs.length + "枚";
         document.getElementById("navSwapBadge").textContent = changedPairs.length;
 
-        // KPIs
         document.getElementById("kpiCost").textContent = fmtYen(totalBuyJpy);
         document.getElementById("kpiBuyCount").textContent = "新規購入 " + buyCount + "枚 (実物92枚¥0)";
         const kpiProx = document.getElementById("kpiProxies");
@@ -1290,7 +1378,6 @@
         document.getElementById("kpiMaxMv").textContent = "最大MV " + maxMv + " / 非土地" + nonLands.length + "枚";
         document.getElementById("kpiColors").textContent = "青" + u + " / 黒" + b + " / 赤" + r + " (" + lands.length + "枚)";
 
-        // Sync Preset highlight
         document.querySelectorAll(".preset-btn").forEach(btn => {
           btn.classList.toggle("selected", btn.getAttribute("data-preset") === state.activePreset);
         });
@@ -1328,14 +1415,14 @@
         if (hasEntomb && hasReanimate && hasWelder) {
           diags.push({
             cls: "diag-info",
-            title: "墓地パッケージ稼働中：【城塞溶接＆軽量リアニメイト型】",
-            body: "《納墓》＋《再活性》で《ビビ》《嵐窯》を1T着地でき、《納墓》＋《ゴブリンの溶接工》で既存の《ボーラスの城塞》を実質2マナで戦場に出せます。"
+            title: "墓地パッケージ稼働中：【城塞溶接＆軽量リアニメイト型・プランA】",
+            body: "王道の選択！《納墓》＋《再活性》で《ビビ》《嵐窯》を1T着地でき、《納墓》＋《ゴブリンの溶接工》で既存の《ボーラスの城塞》を実質2マナで戦場に出せます。"
           });
         } else if (hasEntomb && hasReanimate && hasBroodlord) {
           diags.push({
             cls: "diag-info",
             title: "墓地パッケージ稼働中：【貯蔵する親竜 4マナ即死コンボ型】",
-            body: "《納墓》＋《再活性》＋召集《真っ二つ》＋《燔祭》により統率者不在でも{2}{B}{B}から確定勝利します（※親竜リアニメイト時の8点ライフロスに注意）。"
+            body: "《納墓》＋《再活性》＋召集《真っ二つ》＋《燔祭》により統率者不在でも{2}{B}{B}から確定勝利します。"
           });
         }
 
@@ -1343,7 +1430,7 @@
           diags.push({
             cls: "diag-ok",
             title: "LED抜き《死の国からの脱出》ループ成立：《研磨基地》搭載",
-            body: "《死の国からの脱出》＋《研磨基地》＋《水蓮の花びら》または《極楽の外套》（ウルザの物語でサーチ可）で決定論的無限切削＆マナ生成が成立します。"
+            body: "《死の国からの脱出》＋《研磨基地》＋《水蓮の花びら》または《極楽の外套》で決定論的無限切削＆マナ生成が成立します。"
           });
         } else if (hasLED) {
           diags.push({
@@ -1388,12 +1475,12 @@
         if (hasStation) {
           boxes.push({
             t: "② 《死の国からの脱出》＋《研磨基地》＋0マナファクト無限切削",
-            b: "戦場に《死の国からの脱出》と《研磨基地》を揃え、《水蓮の花びら》（または《ウルザの物語》から出した《極楽の外套》）で自分を3枚切削→墓地3枚追放で0マナファクトを脱出→研磨基地アンタップを繰り返し、山札を掘り切って《タッサの神託者》で勝利します。"
+            b: "戦場に《死の国からの脱出》と《研磨基地》を揃え、《水蓮の花びら》で自分を3枚切削→墓地3枚追放で0マナファクトを脱出→研磨基地アンタップを繰り返し、山札を掘り切って《タッサの神託者》で勝利します。"
           });
         }
         boxes.push({
-          t: "③ クラーク＋《納墓》／《再活性》／《Demonic Consultation》倍化テク",
-          b: "クラーク下で《納墓》に勝てば2枚同時墓地送り（例：城塞＋魔法使いの杖）、《再活性》に勝てば自軍エンジンと相手生物の2体同時奪取（負けてもライフロス0で手札回収）、《Demonic Consultation》《汚れた契約》ならコピーで《タッサの神託者》を手札に加えて本体で山札全追放から即勝利します。"
+          t: "③ クラーク＋《納墓》／《再活性》／《悪魔の相談》倍化テク",
+          b: "クラーク下で《納墓》に勝てば2枚同時墓地送り、《再活性》に勝てば自軍エンジンと相手生物の2体同時奪取（負けてもライフロス0で手札回収）、《悪魔の相談》《汚れた契約》ならコピーで《タッサの神託者》を手札に加えて本体で山札全追放から即勝利します。"
         });
 
         document.getElementById("comboGuideBox").innerHTML = boxes.map(x =>
@@ -1511,8 +1598,8 @@
                     '<input type="checkbox" ' + (card.isOwned ? 'checked' : '') + ' data-own-key="' + card.ownKey + '" />' +
                     '<span>実物</span>' +
                   '</label>' +
-                  '<div class="card-main-info">' +
-                    '<div class="card-jp">' + card.jp + badges + '</div>' +
+                  '<div class="card-main-info" data-img-en="' + card.en + '" data-img-jp="' + card.jp + '">' +
+                    '<div class="card-jp">🖼️ ' + card.jp + badges + '</div>' +
                     '<div class="card-en">' + card.en + ' (MV:' + card.mv + ')</div>' +
                   '</div>' +
                 '</div>' +
@@ -1554,7 +1641,7 @@
         }
 
         document.getElementById("handGrid").innerHTML = hand.map(c =>
-          '<div class="hand-card-row"><div><strong>' + c.jp + '</strong><span style="display:block; font-size:11px; color:var(--muted);">' + CAT_LABELS[c.cat] + ' (MV:' + c.mv + ')</span></div>' +
+          '<div class="hand-card-row"><div style="cursor:pointer;" data-img-en="' + c.en + '" data-img-jp="' + c.jp + '"><strong>🖼️ ' + c.jp + '</strong><span style="display:block; font-size:11px; color:var(--muted);">' + CAT_LABELS[c.cat] + ' (MV:' + c.mv + ')</span></div>' +
           (c.isRep ? '<span class="pill pill-blue">新規枠</span>' : '<span class="pill">所持枠</span>') + '</div>'
         ).join("");
       }
@@ -1622,6 +1709,18 @@
 
       // Events
       document.addEventListener("click", function (e) {
+        // Image modal trigger
+        const imgTarget = e.target.closest("[data-img-en]");
+        if (imgTarget) {
+          openCardModal(imgTarget.getAttribute("data-img-en"), imgTarget.getAttribute("data-img-jp"));
+          return;
+        }
+
+        if (e.target.id === "cardModal" || e.target.id === "modalCloseBtn") {
+          closeCardModal();
+          return;
+        }
+
         const navBtn = e.target.closest(".nav-btn");
         if (navBtn) {
           const tab = navBtn.getAttribute("data-tab");
@@ -1738,14 +1837,14 @@
       });
 
       document.getElementById("btnGenCode").addEventListener("click", function () {
-        const code = "KS3:" + btoa(JSON.stringify({ p: state.activePreset, c: state.choices, o: state.ownedMap }));
+        const code = "KS4:" + btoa(JSON.stringify({ p: state.activePreset, c: state.choices, o: state.ownedMap }));
         document.getElementById("inpSaveCode").value = code;
         copyTextRobust(code, "セーブコードを生成＆コピーしました");
       });
 
       document.getElementById("btnLoadCode").addEventListener("click", function () {
         const val = (document.getElementById("inpSaveCode").value || "").trim();
-        if (!val.startsWith("KS3:")) { showToast("KS3:から始まるコードを入力してください"); return; }
+        if (!val.startsWith("KS4:")) { showToast("KS4:から始まるコードを入力してください"); return; }
         try {
           const d = JSON.parse(atob(val.slice(4)));
           state.activePreset = d.p || "custom";
