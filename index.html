@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="サイクラ最適化" />
-  <title>サイクラ完全非プロキシ最適化 (iPhone Edition)</title>
+  <meta name="apple-mobile-web-app-title" content="クラサイ最適化" />
+  <title>クラサイ.csv 専用オプティマイザー (墓地利用対応版)</title>
   <style>
     :root {
       --bg: #090d16;
@@ -22,7 +22,9 @@
       --amber: #f59e0b;
       --amber-bg: rgba(245, 158, 11, 0.16);
       --red: #ef4444;
-      --red-bg: rgba(239, 68, 68, 0.16);
+      --red-bg: rgba(239, 68, 68, 0.18);
+      --purple: #a855f7;
+      --purple-bg: rgba(168, 85, 247, 0.16);
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
@@ -40,7 +42,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
       font-variant-numeric: tabular-nums;
       line-height: 1.45;
-      padding-top: calc(64px + var(--safe-top));
+      padding-top: calc(66px + var(--safe-top));
       padding-bottom: calc(78px + var(--safe-bottom));
       overscroll-behavior-y: none;
     }
@@ -52,10 +54,12 @@
 
     .app-header {
       position: fixed;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       z-index: 40;
       padding: calc(8px + var(--safe-top)) 14px 8px;
-      background: rgba(18, 24, 38, 0.92);
+      background: rgba(18, 24, 38, 0.93);
       -webkit-backdrop-filter: blur(14px);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
@@ -70,164 +74,1706 @@
       gap: 8px;
     }
 
-    .brand-row { display: flex; align-items: center; gap: 7px; }
-    .grixis-dots { display: inline-flex; gap: 3px; }
-    .grixis-dots span { width: 9px; height: 9px; border-radius: 50%; }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .grixis-dots {
+      display: inline-flex;
+      gap: 3px;
+    }
+
+    .grixis-dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
     .dot-u { background: #2563eb; }
     .dot-b { background: #475569; border: 1px solid #94a3b8; }
     .dot-r { background: #dc2626; }
 
-    .header-title { font-size: 13px; font-weight: 700; color: var(--muted); }
-    .header-cost { font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em; }
-    .header-badges { display: flex; align-items: center; gap: 6px; }
+    .header-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .header-cost {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
 
     .pill {
-      display: inline-flex; align-items: center;
-      padding: 3px 8px; border-radius: 999px;
-      font-size: 11px; font-weight: 700;
-      background: var(--card-sub); border: 1px solid var(--border); color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      color: var(--text);
       white-space: nowrap;
     }
+
     .pill-blue { background: var(--blue-bg); border-color: rgba(59,130,246,0.45); color: #93c5fd; }
     .pill-green { background: var(--green-bg); border-color: rgba(16,185,129,0.45); color: #6ee7b7; }
     .pill-amber { background: var(--amber-bg); border-color: rgba(245,158,11,0.45); color: #fcd34d; }
+    .pill-red { background: var(--red-bg); border-color: rgba(239,68,68,0.5); color: #fca5a5; }
+    .pill-purple { background: var(--purple-bg); border-color: rgba(168,85,247,0.45); color: #d8b4fe; }
 
-    .container { max-width: 720px; margin: 0 auto; padding: 12px 12px 24px; }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 12px 12px 24px;
+    }
+
     .tab-view { display: none; }
     .tab-view.active { display: block; }
 
     .card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 14px; padding: 14px; margin-bottom: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
     }
 
     .section-title {
-      font-size: 14px; font-weight: 700; margin-bottom: 10px;
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
 
-    .sub-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .sub-text {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
 
-    .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
-    .kpi-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
-    .kpi-label { font-size: 11px; color: var(--muted); }
-    .kpi-val { font-size: 17px; font-weight: 800; margin-top: 2px; }
-    .kpi-note { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
 
-    .preset-list { display: flex; flex-direction: column; gap: 7px; }
+    .kpi-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .kpi-val {
+      font-size: 17px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .kpi-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .preset-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
     .preset-btn {
-      width: 100%; background: var(--card-sub); border: 1px solid var(--border);
-      border-radius: 11px; padding: 10px 12px; color: var(--text);
-      display: flex; align-items: center; justify-content: space-between; text-align: left; cursor: pointer;
+      width: 100%;
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 11px 12px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+      cursor: pointer;
     }
-    .preset-btn.selected { border-color: var(--blue); background: var(--blue-bg); }
+
+    .preset-btn:active { transform: scale(0.99); }
+    .preset-btn.selected {
+      border-color: var(--blue);
+      background: var(--blue-bg);
+    }
+
     .preset-name { font-size: 13px; font-weight: 700; }
-    .preset-desc { font-size: 11px; color: var(--muted); margin-top: 1px; }
-    .preset-price { font-size: 13px; font-weight: 800; color: #6ee7b7; margin-left: 8px; white-space: nowrap; }
-
-    .slider-block { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
-    .slider-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-    .slider-label { font-size: 13px; font-weight: 600; }
-    .slider-val { font-size: 16px; font-weight: 800; color: #6ee7b7; }
-
-    input[type="range"] {
-      -webkit-appearance: none; appearance: none; width: 100%; height: 8px;
-      background: #263147; border-radius: 999px; outline: none; margin: 8px 0;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none; appearance: none; width: 26px; height: 26px;
-      border-radius: 50%; background: #10b981; border: 3px solid #ffffff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.45); cursor: pointer;
+    .preset-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+    .preset-price {
+      font-size: 14px;
+      font-weight: 800;
+      color: #93c5fd;
+      margin-left: 10px;
+      white-space: nowrap;
     }
 
-    .stepper-row { display: flex; gap: 6px; margin-top: 6px; }
-    .btn-sm {
-      flex: 1; min-height: 36px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--card-sub); color: var(--text); font-size: 12px; font-weight: 700; cursor: pointer; padding: 6px 10px;
+    .diag-item {
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+      font-size: 12px;
     }
-    .btn-primary { background: var(--blue); border-color: var(--blue); color: #ffffff; }
-    .btn-green { background: var(--green-bg); border-color: rgba(16,185,129,0.5); color: #6ee7b7; }
 
-    .toggle-row {
-      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
-      padding: 10px 0; border-bottom: 1px solid rgba(40, 50, 72, 0.6); cursor: pointer;
-    }
-    .toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .toggle-row input[type="checkbox"] { width: 22px; height: 22px; margin-top: 2px; accent-color: var(--green); flex-shrink: 0; }
-
-    .diag-item { border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--border); font-size: 12px; }
     .diag-item:last-child { margin-bottom: 0; }
     .diag-ok { background: var(--green-bg); border-color: rgba(16,185,129,0.4); }
     .diag-info { background: var(--blue-bg); border-color: rgba(59,130,246,0.4); }
+    .diag-warn { background: var(--amber-bg); border-color: rgba(245,158,11,0.4); }
+    .diag-danger { background: var(--red-bg); border-color: rgba(239,68,68,0.45); }
     .diag-title { font-weight: 700; margin-bottom: 3px; color: #ffffff; }
 
-    .swap-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 9px; }
-    .swap-top { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
-    .swap-out { font-size: 12px; color: #fca5a5; text-decoration: line-through; }
-    .swap-in { font-size: 14px; font-weight: 700; color: #6ee7b7; }
-    .swap-reason { font-size: 12px; color: #cbd5e1; background: var(--card-sub); padding: 8px 10px; border-radius: 8px; margin-bottom: 9px; }
-    .swap-actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    /* Slot Cards in Tab 2 */
+    .slot-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
 
+    .slot-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .slot-base-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    .option-btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .opt-choice-btn {
+      width: 100%;
+      text-align: left;
+      padding: 9px 10px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--card-sub);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .opt-choice-btn.active-opt {
+      border-color: var(--blue);
+      background: var(--blue-bg);
+    }
+
+    .opt-choice-btn.active-base {
+      border-color: #64748b;
+      background: rgba(100, 116, 139, 0.2);
+    }
+
+    .opt-top-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .opt-reason-line {
+      font-size: 11px;
+      color: #cbd5e1;
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    /* Tab 3: 100-Card List */
     .search-input {
-      width: 100%; font-size: 16px; padding: 10px 12px; border-radius: 10px;
-      border: 1px solid var(--border); background: var(--card-sub); color: var(--text); outline: none; margin-bottom: 9px;
+      width: 100%;
+      font-size: 16px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card-sub);
+      color: var(--text);
+      outline: none;
+      margin-bottom: 9px;
     }
 
-    .cat-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; }
+    .search-input:focus { border-color: var(--blue); }
+
+    .cat-chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      -webkit-overflow-scrolling: touch;
+    }
+
     .cat-chips::-webkit-scrollbar { display: none; }
-    .chip-btn {
-      padding: 6px 11px; border-radius: 999px; border: 1px solid var(--border);
-      background: var(--card); color: var(--muted); font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
-    }
-    .chip-btn.active { background: var(--green); border-color: var(--green); color: #090d16; }
 
-    .deck-group-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; color: var(--muted); padding: 8px 4px 5px; }
-    .deck-item {
-      background: var(--card); border: 1px solid var(--border); border-radius: 11px;
-      padding: 9px 11px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    .chip-btn {
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
     }
-    .deck-item-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
-    .owned-check-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 36px; min-height: 38px; cursor: pointer; }
-    .owned-check-wrap input { width: 20px; height: 20px; accent-color: var(--green); }
-    .owned-check-wrap span { font-size: 9px; color: var(--muted); margin-top: 1px; }
+
+    .chip-btn.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #ffffff;
+    }
+
+    .deck-group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      padding: 8px 4px 5px;
+    }
+
+    .deck-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 9px 11px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .deck-item-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .owned-check-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      cursor: pointer;
+    }
+
+    .owned-check-wrap input {
+      width: 19px;
+      height: 19px;
+      accent-color: var(--green);
+    }
+
+    .owned-check-wrap span {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
 
     .card-main-info { min-width: 0; flex: 1; }
-    .card-jp { font-size: 13.5px; font-weight: 700; color: #ffffff; word-break: break-word; }
+    .card-jp { font-size: 13px; font-weight: 700; color: #ffffff; word-break: break-word; }
     .card-en { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .deck-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+
+    .deck-item-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
     .card-price { font-size: 12.5px; font-weight: 700; }
 
     .mini-action-btn {
-      padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border);
-      background: var(--card-sub); color: #cbd5e1; font-size: 10.5px; font-weight: 600; cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card-sub);
+      color: #93c5fd;
+      font-size: 10.5px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
-    .krark-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
-    .select-box { width: 100%; font-size: 16px; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--card-sub); color: var(--text); }
-    .flip-result-box { background: var(--card-sub); border: 1px solid var(--border); border-radius: 11px; padding: 12px; margin-top: 10px; }
-    .hand-grid { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 10px; }
+    /* Tools & Export */
+    .stepper-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .btn-sm {
+      flex: 1;
+      min-height: 38px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-sub);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px 10px;
+    }
+
+    .btn-primary { background: var(--blue); border-color: var(--blue); color: #ffffff; }
+    .btn-green { background: var(--green-bg); border-color: rgba(16,185,129,0.5); color: #6ee7b7; }
+
+    .krark-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .select-box {
+      width: 100%;
+      font-size: 16px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--card-sub);
+      color: var(--text);
+    }
+
+    .flip-result-box {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .hand-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
     .hand-card-row {
-      background: var(--card-sub); border: 1px solid var(--border); border-radius: 9px;
-      padding: 8px 11px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 11px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
     }
 
     .export-area {
-      width: 100%; height: 150px; font-size: 13px; padding: 10px; border-radius: 10px;
-      border: 1px solid var(--border); background: #070a12; color: #e2e8f0; margin-top: 8px; resize: vertical;
+      width: 100%;
+      height: 155px;
+      font-size: 13px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #070a12;
+      color: #e2e8f0;
+      margin-top: 8px;
+      resize: vertical;
+    }
+
+    .combo-box {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px;
+      margin-bottom: 8px;
+    }
+
+    .combo-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #93c5fd;
+      margin-bottom: 4px;
     }
 
     .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
-      background: rgba(18, 24, 38, 0.95); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-      border-top: 1px solid var(--border); padding-bottom: var(--safe-bottom);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
+      background: rgba(18, 24, 38, 0.95);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+      padding-bottom: var(--safe-bottom);
     }
-    .bottom-nav-inner { max-width: 720px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); height: 60px; }
+
+    .bottom-nav-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      height: 60px;
+    }
+
     .nav-btn {
-      background: none; border: none; color: var(--muted); display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; font-weight: 700; cursor: pointer; position: relative;
+      background: none;
+      border: none;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      position: relative;
     }
-    .nav-btn.active { color: #10b981; }
+
+    .nav-btn.active { color: #60a5fa; }
     .nav-icon { font-size: 18px; line-height: 1; }
     .nav-badge {
-      position: absolute; top: 5px; right: calc(50% - 22px);
-      background: var(--green); color: #090d16; font-size: 9.5px; font-weight: 800; padding: 1px 5px;
+      position: absolute;
+      top: 5px;
+      right: calc(50% - 24px);
+      background: var(--blue);
+      color: #ffffff;
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 999px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: calc(74px + var(--safe-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10b981;
+      color: #ffffff;
+      padding: 9px 16px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 60;
+      white-space: nowrap;
+    }
+
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div>
+        <div class="brand-row">
+          <span class="grixis-dots"><span class="dot-u"></span><span class="dot-b"></span><span class="dot-r"></span></span>
+          <span class="header-title">クラサイ.csv 専用構築</span>
+        </div>
+        <div class="header-cost" id="hdrTotalCost">¥9,860</div>
+      </div>
+      <div class="header-badges">
+        <span class="pill pill-green" id="hdrProxyPill">プロキシ 0枚</span>
+        <span class="pill pill-blue" id="hdrSwapPill">入替 12枚</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- TAB 1: Plan Selector & Diagnostics -->
+    <section id="view-plans" class="tab-view active">
+      <div class="kpi-grid">
+        <div class="kpi-box">
+          <div class="kpi-label">追加購入額（新規パーツ）</div>
+          <div class="kpi-val" id="kpiCost">¥9,860</div>
+          <div class="kpi-note" id="kpiBuyCount" style="color:#6ee7b7;">購入枚数 12枚</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-label">残プロキシ数 / 入替枠</div>
+          <div class="kpi-val" id="kpiProxies" style="color:#6ee7b7;">0枚 / 12枠</div>
+          <div class="kpi-note" id="kpiSingleton">100枚ハイランダー適合</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-label">非土地 平均MV (中央値)</div>
+          <div class="kpi-val" id="kpiMv" style="color:#fcd34d;">2.07 (2.0)</div>
+          <div class="kpi-note" id="kpiMaxMv">最大MV 6 / 城塞型適正</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-label">土地色マナ源 (計26〜27枚)</div>
+          <div class="kpi-val" id="kpiColors" style="font-size:15px;">青20 / 黒20 / 赤19</div>
+          <div class="kpi-note">《汚れた契約》100%適合</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <span>1. 予算1万円＆墓地利用プリセット</span>
+          <span class="sub-text">実物92枚登録済</span>
+        </div>
+        <div class="preset-list">
+          <button type="button" class="preset-btn selected" data-preset="planA">
+            <div>
+              <div class="preset-name">プランA：城塞溶接＆納墓・再活性（推奨）</div>
+              <div class="preset-desc">プロキシ完全解消＋《納墓》《再活性》《ゴブリンの溶接工》《発掘》《通り抜け》。既存の《ボーラスの城塞》《ビビ》を高速リアニメイト</div>
+            </div>
+            <span class="preset-price">¥9,860</span>
+          </button>
+
+          <button type="button" class="preset-btn" data-preset="planB">
+            <div>
+              <div class="preset-name">プランB：親竜ワンショット＆納墓・再活性</div>
+              <div class="preset-desc">プロキシ完全解消＋《納墓》《再活性》《貯蔵する親竜》《真っ二つ》《燔祭》。統率者不在でも4マナ({2}{B}{B})から確定勝利</div>
+            </div>
+            <span class="preset-price">¥10,760</span>
+          </button>
+
+          <button type="button" class="preset-btn" data-preset="planC">
+            <div>
+              <div class="preset-name">プランC：最小投資・プロキシ8枚のみ解消</div>
+              <div class="preset-desc">実物92枚を一切崩さず、プロキシ8枚だけを《研磨基地》《極楽の外套》《魔法使いの杖》等へ置換</div>
+            </div>
+            <span class="preset-price">¥6,110</span>
+          </button>
+
+          <button type="button" class="preset-btn" data-preset="planD">
+            <div>
+              <div class="preset-name">プランD：墓地活用＋壊し屋＆クラウドランド</div>
+              <div class="preset-desc">プランAに加え《呪詛の壊し屋》《贅沢のスイート》《訓練施設》まで揃える大会完全仕様</div>
+            </div>
+            <span class="preset-price">¥15,460</span>
+          </button>
+
+          <button type="button" class="preset-btn" data-preset="base">
+            <div>
+              <div class="preset-name">現状リスト（クラサイ.csv 原型）</div>
+              <div class="preset-desc">現在お手元の100枚（実物92枚＋プロキシ8枚）にそのまま戻して比較</div>
+            </div>
+            <span class="preset-price">¥0</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">2. デッキ構造・墓地パッケージ診断</div>
+        <div id="diagContainer"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">3. 現在の構築で成立する主力コンボ手順</div>
+        <div id="comboGuideBox"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: Customizable Swap & Graveyard Slots -->
+    <section id="view-swaps" class="tab-view">
+      <div class="card" style="padding:11px 13px;">
+        <p class="sub-text">
+          <strong>プロキシ8枠</strong>および<strong>墓地利用・強化調整7枠（計15枠）</strong>を個別にタップして切り替えられます。どの組み合わせを選んでも100枚ハイランダーが維持されます。
+        </p>
+      </div>
+      <div id="slotsContainer"></div>
+    </section>
+
+    <!-- TAB 3: Full 100-Card Manager -->
+    <section id="view-deck" class="tab-view">
+      <input id="inpSearch" type="search" class="search-input" placeholder="カード名（日/英）やPROXY・墓地で検索..." />
+      <div class="cat-chips" id="catChips">
+        <button type="button" class="chip-btn active" data-cat="ALL">すべて(100)</button>
+        <button type="button" class="chip-btn" data-cat="BUY">購入対象のみ</button>
+        <button type="button" class="chip-btn" data-cat="Creatures">生物</button>
+        <button type="button" class="chip-btn" data-cat="Instants">インスタント</button>
+        <button type="button" class="chip-btn" data-cat="Sorceries">ソーサリー</button>
+        <button type="button" class="chip-btn" data-cat="Artifacts">ファクト</button>
+        <button type="button" class="chip-btn" data-cat="Enchantments">エンチャント</button>
+        <button type="button" class="chip-btn" data-cat="Lands">土地</button>
+      </div>
+      <div id="deckListContainer"></div>
+    </section>
+
+    <!-- TAB 4: Playtest & Export -->
+    <section id="view-tools" class="tab-view">
+      <div class="card">
+        <div class="section-title">
+          <span>1. 実戦コイントス計算機 (Krarkulator)</span>
+          <span class="pill pill-blue">卓上ツール</span>
+        </div>
+        <p class="sub-text">クラーク＋《調和の神童》《魔法使いの杖》の誘発回数に合わせて一括コイントスを実行します。</p>
+        <div class="krark-controls">
+          <div>
+            <label class="kpi-label">クラーク誘発回数</label>
+            <select id="selTriggers" class="select-box">
+              <option value="1">誘発 1回 (クラーク単体)</option>
+              <option value="2" selected>誘発 2回 (+神童 or 杖)</option>
+              <option value="3">誘発 3回 (+神童＆杖)</option>
+              <option value="4">誘発 4回</option>
+              <option value="5">誘発 5回</option>
+            </select>
+          </div>
+          <div>
+            <label class="kpi-label">《クラークの親指》方針</label>
+            <select id="selThumbMode" class="select-box">
+              <option value="none" selected>親指なし (通常50%)</option>
+              <option value="loop">親指あり：ループ優先</option>
+              <option value="copy">親指あり：全コピー優先</option>
+            </select>
+          </div>
+        </div>
+        <div class="stepper-row">
+          <button type="button" id="btnCastFlip" class="btn-sm btn-primary" style="min-height:42px; font-size:14px;">
+            呪文を唱えてコイントス！
+          </button>
+          <button type="button" id="btnResetStorm" class="btn-sm" style="flex:0 0 88px;">リセット</button>
+        </div>
+        <div class="flip-result-box">
+          <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted);">
+            <span>現在ストーム数: <strong id="lblStormCount" style="color:#fff;">0</strong></span>
+            <span>勝利回数(悪漢宝物): <strong id="lblWinFlips" style="color:#fcd34d;">0</strong></span>
+          </div>
+          <div id="flipDetailText" style="margin-top:8px; font-size:13px; font-weight:700; color:#93c5fd;">
+            ボタンを押すとコイントス結果が表示されます
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <span>2. 初手7枚マリガン練習（現在リスト連動）</span>
+          <button type="button" id="btnDrawHand" class="btn-sm btn-primary" style="flex:0 0 auto; padding:5px 12px;">7枚引く</button>
+        </div>
+        <div id="handVerdict" class="diag-item diag-info"></div>
+        <div id="handGrid" class="hand-grid"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">3. 買い物リスト・Moxfield出力・共有</div>
+        <div class="stepper-row">
+          <button type="button" id="btnOutShopping" class="btn-sm btn-green">購入カード買い物リスト</button>
+          <button type="button" id="btnOutMoxfield" class="btn-sm btn-primary">Moxfield英語100枚</button>
+        </div>
+        <div class="stepper-row">
+          <button type="button" id="btnOutDiff" class="btn-sm">クラサイ.csvからの変更表</button>
+          <button type="button" id="btnShareIOS" class="btn-sm">iPhone共有シートで送る</button>
+        </div>
+        <textarea id="txtExport" class="export-area" readonly placeholder="上のボタンを押すとここに買い物リストやMoxfield用リストが出力されます"></textarea>
+
+        <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border);">
+          <div class="section-title" style="margin-bottom:4px;">
+            <span>カスタム状態のセーブコード</span>
+            <button type="button" id="btnResetPlanA" class="mini-action-btn" style="color:#fca5a5;">プランAに戻す</button>
+          </div>
+          <input id="inpSaveCode" type="text" class="search-input" style="margin-bottom:6px;" placeholder="セーブコード(KS3:...)を貼り付けて復元" />
+          <div class="stepper-row">
+            <button type="button" id="btnGenCode" class="btn-sm">現在のコードを生成</button>
+            <button type="button" id="btnLoadCode" class="btn-sm btn-primary">コードから復元</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button type="button" class="nav-btn active" data-tab="plans">
+        <span class="nav-icon">⚡</span>
+        <span>プラン・診断</span>
+      </button>
+      <button type="button" class="nav-btn" data-tab="swaps">
+        <span class="nav-icon">⇄</span>
+        <span>差替・墓地枠</span>
+        <span class="nav-badge" id="navSwapBadge">12</span>
+      </button>
+      <button type="button" class="nav-btn" data-tab="deck">
+        <span class="nav-icon">☰</span>
+        <span>100枚管理</span>
+      </button>
+      <button type="button" class="nav-btn" data-tab="tools">
+        <span class="nav-icon">🎲</span>
+        <span>実戦・出力</span>
+      </button>
+    </div>
+  </nav>
+
+  <div id="toast" class="toast">コピーしました</div>
+
+  <script>
+    (function () {
+      // Exact 100 cards from クラサイ.csv (92 owned = proxy:false, 8 proxies = proxy:true)
+      const BASE_DECK = [
+        // Commanders (2)
+        { id: "c1", en: "Krark, the Thumbless", jp: "親指なしのクラーク", cat: "Commanders", mv: 2, jpy: 200 },
+        { id: "c2", en: "Silas Renn, Seeker Adept", jp: "求道の達人、サイラス・レン", cat: "Commanders", mv: 3, jpy: 300 },
+
+        // Creatures (14)
+        { id: "cr1", en: "Ragavan, Nimble Pilferer", jp: "敏捷なこそ泥、ラガバン", cat: "Creatures", mv: 1, jpy: 5500, fastMana: true },
+        { id: "cr2", en: "Mockingbird", jp: "マネドリ", cat: "Creatures", mv: 1, jpy: 800, engine: true },
+        { id: "cr3", en: "Thassa's Oracle", jp: "タッサの神託者", cat: "Creatures", mv: 2, jpy: 2500 },
+        { id: "cr4", en: "Muse Seeker", jp: "Muse Seeker", cat: "Creatures", mv: 2, jpy: 400, engine: true },
+        { id: "cr5", en: "Tavern Scoundrel", jp: "酒場の悪漢", cat: "Creatures", mv: 2, jpy: 100, engine: true },
+        { id: "cr6", en: "Harmonic Prodigy", jp: "調和の神童", cat: "Creatures", mv: 2, jpy: 900, engine: true },
+        { id: "cr7", en: "Simian Spirit Guide", jp: "猿人の指導霊", cat: "Creatures", mv: 3, jpy: 400, fastMana: true },
+        { id: "cr8", en: "Professional Face-Breaker", jp: "プロの顔壊し", cat: "Creatures", mv: 3, jpy: 500, engine: true },
+        { id: "cr9", en: "Valley Floodcaller", jp: "渓間の洪水呼び", cat: "Creatures", mv: 3, jpy: 600, engine: true },
+        { id: "cr10", en: "Birgi, God of Storytelling", jp: "語りの神、ビルギ", cat: "Creatures", mv: 3, jpy: 3800, engine: true },
+        { id: "cr11", en: "Vivi Ornitier", jp: "迷える黒魔道士、ビビ", cat: "Creatures", mv: 3, jpy: 4800, engine: true },
+        { id: "cr12", en: "Ashling, Flame Dancer", jp: "炎の踊り手、アシュリング", cat: "Creatures", mv: 4, jpy: 600, engine: true },
+        { id: "cr13", en: "Archmage Emeritus", jp: "名誉教授", cat: "Creatures", mv: 4, jpy: 600, engine: true },
+        { id: "cr14", en: "Storm-Kiln Artist", jp: "嵐窯の芸術家", cat: "Creatures", mv: 4, jpy: 300, engine: true },
+
+        // Instants (32)
+        { id: "in1", en: "Slaughter Pact", jp: "殺戮の契約", cat: "Instants", mv: 0, jpy: 250 },
+        { id: "in2", en: "Pact of Negation", jp: "否定の契約", cat: "Instants", mv: 0, jpy: 1800 },
+        { id: "in3", en: "Demonic Consultation", jp: "Demonic Consultation", cat: "Instants", mv: 1, jpy: 1000, tutor: true },
+        { id: "in4", en: "Gut Shot", jp: "はらわた撃ち", cat: "Instants", mv: 1, jpy: 700 },
+        { id: "in5", en: "Dark Ritual", jp: "暗黒の儀式", cat: "Instants", mv: 1, jpy: 150, fastMana: true },
+        { id: "in6", en: "Surgical Extraction", jp: "外科的摘出", cat: "Instants", mv: 1, jpy: 300 },
+        { id: "in7", en: "Vampiric Tutor", jp: "吸血の教示者", cat: "Instants", mv: 1, jpy: 7800, proxy: true, tutor: true },
+        { id: "in8", en: "Pyroblast", jp: "紅蓮破", cat: "Instants", mv: 1, jpy: 1000, printWarn: "olep" },
+        { id: "in9", en: "Culling the Weak", jp: "弱者選別", cat: "Instants", mv: 1, jpy: 1200, fastMana: true },
+        { id: "in10", en: "Chain of Vapor", jp: "蒸気の連鎖", cat: "Instants", mv: 1, jpy: 800 },
+        { id: "in11", en: "Mystical Tutor", jp: "神秘の教示者", cat: "Instants", mv: 1, jpy: 2400, tutor: true },
+        { id: "in12", en: "Mental Misstep", jp: "精神的つまづき", cat: "Instants", mv: 1, jpy: 1000 },
+        { id: "in13", en: "Red Elemental Blast", jp: "赤霊破", cat: "Instants", mv: 1, jpy: 500, printWarn: "30a" },
+        { id: "in14", en: "An Offer You Can't Refuse", jp: "断れない提案", cat: "Instants", mv: 1, jpy: 500 },
+        { id: "in15", en: "Flusterstorm", jp: "狼狽の嵐", cat: "Instants", mv: 1, jpy: 700 },
+        { id: "in16", en: "Fork", jp: "Fork", cat: "Instants", mv: 2, jpy: 4500, printWarn: "30a" },
+        { id: "in17", en: "Cabal Ritual", jp: "陰謀団の儀式", cat: "Instants", mv: 2, jpy: 1600, fastMana: true },
+        { id: "in18", en: "Tainted Pact", jp: "汚れた契約", cat: "Instants", mv: 2, jpy: 4200, tutor: true },
+        { id: "in19", en: "Dramatic Reversal", jp: "劇的な逆転", cat: "Instants", mv: 2, jpy: 200, fastMana: true },
+        { id: "in20", en: "Brain Freeze", jp: "思考停止", cat: "Instants", mv: 2, jpy: 400 },
+        { id: "in21", en: "Borne Upon a Wind", jp: "風に運ばれて", cat: "Instants", mv: 2, jpy: 300 },
+        { id: "in22", en: "Daze", jp: "目くらまし", cat: "Instants", mv: 2, jpy: 500 },
+        { id: "in23", en: "Mogg Salvage", jp: "モグの分捕り", cat: "Instants", mv: 3, jpy: 100 },
+        { id: "in24", en: "Fierce Guardianship", jp: "激情の後見", cat: "Instants", mv: 3, jpy: 8000 },
+        { id: "in25", en: "Flare of Duplication", jp: "複製の閃光", cat: "Instants", mv: 3, jpy: 400 },
+        { id: "in26", en: "Deflecting Swat", jp: "偏向はたき", cat: "Instants", mv: 3, jpy: 12000, proxy: true },
+        { id: "in27", en: "Sink into Stupor", jp: "朦朧への没入", cat: "Instants", mv: 3, jpy: 1200 },
+        { id: "in28", en: "Mindbreak Trap", jp: "精神壊しの罠", cat: "Instants", mv: 4, jpy: 1200 },
+        { id: "in29", en: "Deadly Rollick", jp: "致命的なはしゃぎ回り", cat: "Instants", mv: 4, jpy: 3800 },
+        { id: "in30", en: "Fury Storm", jp: "Fury Storm", cat: "Instants", mv: 4, jpy: 800 },
+        { id: "in31", en: "Force of Will", jp: "意志の力", cat: "Instants", mv: 5, jpy: 11000 },
+        { id: "in32", en: "Submerge", jp: "水没", cat: "Instants", mv: 5, jpy: 400 },
+
+        // Sorceries (7)
+        { id: "so1", en: "Gitaxian Probe", jp: "ギタクシア派の調査", cat: "Sorceries", mv: 1, jpy: 500 },
+        { id: "so2", en: "Gamble", jp: "ギャンブル", cat: "Sorceries", mv: 1, jpy: 2400, tutor: true },
+        { id: "so3", en: "Strike It Rich", jp: "一攫千金", cat: "Sorceries", mv: 1, jpy: 250, fastMana: true },
+        { id: "so4", en: "Rite of Flame", jp: "炎の儀式", cat: "Sorceries", mv: 1, jpy: 800, fastMana: true },
+        { id: "so5", en: "Imperial Seal", jp: "伝国の玉璽", cat: "Sorceries", mv: 1, jpy: 24000, proxy: true, tutor: true },
+        { id: "so6", en: "Demonic Tutor", jp: "悪魔の教示者", cat: "Sorceries", mv: 2, jpy: 8800, tutor: true, printWarn: "30a" },
+        { id: "so7", en: "Jeska's Will", jp: "ジェスカの意志", cat: "Sorceries", mv: 3, jpy: 5800, fastMana: true, engine: true },
+
+        // Artifacts (13)
+        { id: "ar1", en: "Mox Amber", jp: "モックス・アンバー", cat: "Artifacts", mv: 0, jpy: 12000, proxy: true, fastMana: true, zeroArt: true },
+        { id: "ar2", en: "Lion's Eye Diamond", jp: "ライオンの瞳のダイアモンド", cat: "Artifacts", mv: 0, jpy: 130000, proxy: true, fastMana: true, zeroArt: true },
+        { id: "ar3", en: "Lotus Petal", jp: "水蓮の花びら", cat: "Artifacts", mv: 0, jpy: 4200, fastMana: true, zeroArt: true },
+        { id: "ar4", en: "Springleaf Drum", jp: "バネ葉の太鼓", cat: "Artifacts", mv: 1, jpy: 100, fastMana: true },
+        { id: "ar5", en: "Vexing Bauble", jp: "苛立たしいガラクタ", cat: "Artifacts", mv: 1, jpy: 300 },
+        { id: "ar6", en: "Sol Ring", jp: "太陽の指輪", cat: "Artifacts", mv: 1, jpy: 200, fastMana: true },
+        { id: "ar7", en: "Mana Vault", jp: "魔力の櫃", cat: "Artifacts", mv: 1, jpy: 14000, proxy: true, fastMana: true },
+        { id: "ar8", en: "Talisman of Dominance", jp: "威圧のタリスマン", cat: "Artifacts", mv: 2, jpy: 400, fastMana: true },
+        { id: "ar9", en: "Wishclaw Talisman", jp: "願い爪のタリスマン", cat: "Artifacts", mv: 2, jpy: 350, tutor: true },
+        { id: "ar10", en: "Arcane Signet", jp: "秘儀の印鑑", cat: "Artifacts", mv: 2, jpy: 100, fastMana: true },
+        { id: "ar11", en: "Relic of Legends", jp: "伝説の秘宝", cat: "Artifacts", mv: 3, jpy: 300, fastMana: true },
+        { id: "ar12", en: "The One Ring", jp: "一つの指輪", cat: "Artifacts", mv: 4, jpy: 13000, proxy: true, engine: true },
+        { id: "ar13", en: "Bolas's Citadel", jp: "ボーラスの城塞", cat: "Artifacts", mv: 6, jpy: 800, engine: true },
+
+        // Enchantments (5)
+        { id: "en1", en: "Mystic Remora", jp: "神秘的負荷", cat: "Enchantments", mv: 1, jpy: 1600, engine: true },
+        { id: "en2", en: "Underworld Breach", jp: "死の国からの脱出", cat: "Enchantments", mv: 2, jpy: 900 },
+        { id: "en3", en: "Copy Enchantment", jp: "エンチャント複製", cat: "Enchantments", mv: 3, jpy: 300, engine: true },
+        { id: "en4", en: "Necropotence", jp: "ネクロポーテンス", cat: "Enchantments", mv: 3, jpy: 5000, engine: true },
+        { id: "en5", en: "Rhystic Study", jp: "リスティックの研究", cat: "Enchantments", mv: 3, jpy: 9000, engine: true },
+
+        // Lands (27)
+        { id: "la1", en: "Urza's Saga", jp: "ウルザの物語", cat: "Lands", mv: 0, jpy: 5500, landColors: ["C"] },
+        { id: "la2", en: "Mana Confluence", jp: "マナの合流点", cat: "Lands", mv: 0, jpy: 5000, landColors: ["U","B","R"] },
+        { id: "la3", en: "Flooded Strand", jp: "溢れかえる岸辺", cat: "Lands", mv: 0, jpy: 2200, landColors: ["U","B","R"] },
+        { id: "la4", en: "Polluted Delta", jp: "汚染された三角州", cat: "Lands", mv: 0, jpy: 3000, landColors: ["U","B","R"] },
+        { id: "la5", en: "Arid Mesa", jp: "乾燥台地", cat: "Lands", mv: 0, jpy: 4200, landColors: ["U","B","R"] },
+        { id: "la6", en: "Forbidden Orchard", jp: "禁忌の果樹園", cat: "Lands", mv: 0, jpy: 1500, landColors: ["U","B","R"] },
+        { id: "la7", en: "Blood Crypt", jp: "血の墓所", cat: "Lands", mv: 0, jpy: 1200, landColors: ["B","R"] },
+        { id: "la8", en: "Bloodstained Mire", jp: "血染めのぬかるみ", cat: "Lands", mv: 0, jpy: 2800, landColors: ["U","B","R"] },
+        { id: "la9", en: "Ancient Tomb", jp: "古えの墳墓", cat: "Lands", mv: 0, jpy: 25000, landColors: ["C"], fastMana: true },
+        { id: "la10", en: "Mountain", jp: "山", cat: "Lands", mv: 0, jpy: 50, landColors: ["R"] },
+        { id: "la11", en: "Watery Grave", jp: "湿った墓", cat: "Lands", mv: 0, jpy: 1400, landColors: ["U","B"] },
+        { id: "la12", en: "Marsh Flats", jp: "湿地の干潟", cat: "Lands", mv: 0, jpy: 4500, landColors: ["U","B","R"] },
+        { id: "la13", en: "Wooded Foothills", jp: "樹木茂る山麓", cat: "Lands", mv: 0, jpy: 2500, landColors: ["U","B","R"] },
+        { id: "la14", en: "Emergence Zone", jp: "出現領域", cat: "Lands", mv: 0, jpy: 300, landColors: ["C"] },
+        { id: "la15", en: "Swamp", jp: "沼", cat: "Lands", mv: 0, jpy: 50, landColors: ["B"] },
+        { id: "la16", en: "Steam Vents", jp: "蒸気孔", cat: "Lands", mv: 0, jpy: 1300, landColors: ["U","R"] },
+        { id: "la17", en: "City of Brass", jp: "真鍮の都", cat: "Lands", mv: 0, jpy: 1500, landColors: ["U","B","R"] },
+        { id: "la18", en: "Drowned Catacomb", jp: "水没した地下墓地", cat: "Lands", mv: 0, jpy: 300, landColors: ["U","B"] },
+        { id: "la19", en: "Otawara, Soaring City", jp: "天上都市、大田原", cat: "Lands", mv: 0, jpy: 4500, landColors: ["U"] },
+        { id: "la20", en: "Island", jp: "島", cat: "Lands", mv: 0, jpy: 50, landColors: ["U"] },
+        { id: "la21", en: "Command Tower", jp: "統率の塔", cat: "Lands", mv: 0, jpy: 100, landColors: ["U","B","R"] },
+        { id: "la22", en: "Prismatic Vista", jp: "虹色の眺望", cat: "Lands", mv: 0, jpy: 4200, landColors: ["U","B","R"] },
+        { id: "la23", en: "Reflecting Pool", jp: "反射池", cat: "Lands", mv: 0, jpy: 1000, landColors: ["U","B","R"] },
+        { id: "la24", en: "Exotic Orchard", jp: "風変わりな果樹園", cat: "Lands", mv: 0, jpy: 150, landColors: ["U","B","R"] },
+        { id: "la25", en: "Scalding Tarn", jp: "沸騰する小湖", cat: "Lands", mv: 0, jpy: 5000, landColors: ["U","B","R"] },
+        { id: "la26", en: "Gemstone Caverns", jp: "宝石の洞窟", cat: "Lands", mv: 0, jpy: 9000, proxy: true, landColors: ["U","B","R"], fastMana: true },
+        { id: "la27", en: "Dragonskull Summit", jp: "竜髑髏の山頂", cat: "Lands", mv: 0, jpy: 300, landColors: ["B","R"] }
+      ];
+
+      // 15 Customizable Slots (8 Proxies + 7 Graveyard/Upgrade Flex Slots) — 100% collision-free
+      const SLOT_OPTIONS = {
+        ar2: {
+          group: "プロキシ解消枠 (8枚)",
+          opts: [
+            { key: "std", en: "Grinding Station", jp: "研磨基地", cat: "Artifacts", mv: 2, jpy: 1200, gyTag: true,
+              reason: "LED抜きの核。《死の国からの脱出》＋0マナファクト（水蓮の花びら・極楽の外套）で決定論的無限切削＆マナ生成が成立" }
+          ]
+        },
+        ar1: {
+          group: "プロキシ解消枠 (8枚)",
+          opts: [
+            { key: "std", en: "Paradise Mantle", jp: "極楽の外套", cat: "Artifacts", mv: 0, jpy: 800, fastMana: true, zeroArt: true,
+              reason: "既存の《ウルザの物語》第3章から直接サーチ可能。クラークを色マナ源にしつつ《研磨基地》無限ループの0マナ枠も兼任" }
+          ]
+        },
+        ar7: {
+          group: "プロキシ解消枠 (8枚)",
+          opts: [
+            { key: "std", en: "Talisman of Creativity", jp: "独創のタリスマン", cat: "Artifacts", mv: 2, jpy: 300, fastMana: true,
+              reason: "青赤アンタップマナを安定供給し、既存の《劇的な逆転》のマナ出力とビビ・杖の展開を支える" }
+          ]
+        },
+        ar12: {
+          group: "プロキシ解消枠 (8枚)",
+          opts: [
+            { key: "std", en: "Wizard's Staff", jp: "魔法使いの杖", cat: "Artifacts", mv: 2, jpy: 660, engine: true,
+              reason: "2026年最新主力装備品。ウィザードのクラークやビビに1マナ装備で誘発倍化、《納墓》→サイラスでも墓地から唱えられる" }
+          ]
+        },
+        so5: {
+          group: "プロキシ解消枠 (8枚)",
+          opts: [
+            { key: "gy", en: "Entomb", jp: "納墓", cat: "Instants", mv: 1, jpy: 1800, tutor: true, gyTag: true,
+              reason: "【墓地軸の核】1マナインスタント墓地サーチ。クラークで勝てば2枚同時墓地送り！《再活性》《溶接工》《サイラス》すべてに直結" },
+            { key: "storm", en: "Solve the Equation", jp: "方程式の求解", cat: "Sorceries", mv: 3, jpy: 350, tutor: true,
+              reason: "墓地パッケージを使わない場合の安価サーチ候補。クラーク下で勝てばインスタント/ソーサリー2枚を直接手札へ" }
+          ]
+        },
+        in7: {
+          group: "プロキシ解消枠 (8枚)",
+          opts: [
+            { key: "std", en: "Muddle the Mixture", jp: "交錯の混乱", cat: "Instants", mv: 2, jpy: 400, tutor: true,
+              reason: "打ち消し兼・変成{1}{U}{U}により《死の国からの脱出》《タッサの神託者》《汚れた契約》《研磨基地》《魔法使いの杖》をサーチ" }
+          ]
+        },
+        in26: {
+          group: "プロキシ解消枠 (8枚)",
+          opts: [
+            { key: "std", en: "Misdirection", jp: "誤った指図", cat: "Instants", mv: 5, jpy: 600,
+              reason: "青カウント豊富な現リストと好相性。統率者不在でも青カード追放から0マナで単体除去やカウンターを曲げる" }
+          ]
+        },
+        la26: {
+          group: "プロキシ解消枠 (8枚)",
+          opts: [
+            { key: "std", en: "Morphic Pool", jp: "変容する泉", cat: "Lands", mv: 0, jpy: 1800, landColors: ["U","B"],
+              reason: "4人卓で確定アンタップインする青黒クラウドランド。初動の《納墓》《再活性》《神秘的負荷》《ネクロポーテンス》を支える" }
+          ]
+        },
+
+        // Graveyard & Flex Upgrade Slots (7 slots)
+        in30: {
+          group: "墓地利用・強化調整枠 (既存実物からの入替)",
+          opts: [
+            { key: "gy", en: "Reanimate", jp: "再活性", cat: "Sorceries", mv: 1, jpy: 1300, gyTag: true,
+              reason: "Fuentes 2026準優勝採用。《納墓》から《ビビ》《嵐窯》《親竜》を1マナ釣り上げ、クラークで勝てば相手墓地の生物も同時に奪取！" }
+          ]
+        },
+        ar11: {
+          group: "墓地利用・強化調整枠 (既存実物からの入替)",
+          opts: [
+            { key: "welder", en: "Goblin Welder", jp: "ゴブリンの溶接工", cat: "Creatures", mv: 1, jpy: 800, engine: true, gyTag: true,
+              reason: "【プランA推奨】《納墓》で《ボーラスの城塞》を落とし、宝物や花びら・ガラクタと交換して実質2マナで城塞を着地させる！" },
+            { key: "brood", en: "Hoarding Broodlord", jp: "貯蔵する親竜", cat: "Creatures", mv: 8, jpy: 400, tutor: true, gyTag: true,
+              reason: "【プランB専用】《納墓》＋《再活性》から《真っ二つ》をサーチし、召集込み合計4マナ({2}{B}{B})で即死コンボを完遂" }
+          ]
+        },
+        in16: {
+          group: "墓地利用・強化調整枠 (既存実物からの入替)",
+          opts: [
+            { key: "welder", en: "Unearth", jp: "発掘", cat: "Sorceries", mv: 1, jpy: 100, gyTag: true,
+              reason: "【プランA推奨】ライフロス0点でMV3以下（クラーク・サイラス・ビビ・神童・洪水呼び・神託者・溶接工）を1マナ蘇生。サイクリング付" },
+            { key: "brood", en: "Saw in Half", jp: "真っ二つ", cat: "Instants", mv: 3, jpy: 1200, gyTag: true,
+              reason: "【プランB専用】親竜を分裂させて2枚サーチする中継札。単体でも神託者や嵐窯の倍化、クラークのコピー誘発に対応するインスタント" }
+          ]
+        },
+        la14: {
+          group: "墓地利用・強化調整枠 (既存実物からの入替)",
+          opts: [
+            { key: "welder", en: "Step Through", jp: "通り抜け", cat: "Sorceries", mv: 5, jpy: 100, tutor: true,
+              reason: "【プランA推奨】打ち消されないウィザードサイクリング{2}で《タッサの神託者》《ビビ》《調和の神童》《洪水呼び》《名誉教授》をサーチ" },
+            { key: "brood", en: "Burnt Offering", jp: "燔祭", cat: "Instants", mv: 1, jpy: 300, fastMana: true, gyTag: true,
+              reason: "【プランB専用】分裂した親竜トークン(MV8)を召集でタップしつつ生け贄にし、赤黒8マナを生んで《死の国からの脱出》へ直結" }
+          ]
+        },
+        cr4: {
+          group: "墓地利用・強化調整枠 (既存実物からの入替)",
+          opts: [
+            { key: "upg", en: "Hexing Squelcher", jp: "呪詛の壊し屋", cat: "Creatures", mv: 2, jpy: 3200,
+              reason: "【プランD強化】クラークの負けバウンスを邪魔せず自軍全呪文を打ち消し不能にし、護法2点ライフでクラークを守る2026年環境標準枠" },
+            { key: "veyran", en: "Veyran, Voice of Duality", jp: "双対の声、ヴェイラン", cat: "Creatures", mv: 3, jpy: 500, engine: true,
+              reason: "安価に誘発倍化ウィザードを3枚体制（神童・杖・ヴェイラン）に増やしたい場合の500円強化候補（通り抜けサーチ対応）" }
+          ]
+        },
+        la27: {
+          group: "墓地利用・強化調整枠 (既存実物からの入替)",
+          opts: [
+            { key: "upg", en: "Luxury Suite", jp: "贅沢のスイート", cat: "Lands", mv: 0, jpy: 1200, landColors: ["B","R"],
+              reason: "1ターン目にタップインするリスクのある《竜髑髏の山頂》を、4人卓確定アンタップインの黒赤クラウドランドへ更新" }
+          ]
+        },
+        la18: {
+          group: "墓地利用・強化調整枠 (既存実物からの入替)",
+          opts: [
+            { key: "upg", en: "Training Center", jp: "訓練施設", cat: "Lands", mv: 0, jpy: 1200, landColors: ["U","R"],
+              reason: "《水没した地下墓地》のタップインリスクを解消し、初動のクラーク・ビビ・杖を無傷で支える青赤クラウドランド" }
+          ]
+        }
+      };
+
+      const PRESETS = {
+        planA: {
+          ar2: "std", ar1: "std", ar7: "std", ar12: "std", so5: "gy", in7: "std", in26: "std", la26: "std",
+          in30: "gy", ar11: "welder", in16: "welder", la14: "welder"
+        },
+        planB: {
+          ar2: "std", ar1: "std", ar7: "std", ar12: "std", so5: "gy", in7: "std", in26: "std", la26: "std",
+          in30: "gy", ar11: "brood", in16: "brood", la14: "brood"
+        },
+        planC: {
+          ar2: "std", ar1: "std", ar7: "std", ar12: "std", so5: "storm", in7: "std", in26: "std", la26: "std"
+        },
+        planD: {
+          ar2: "std", ar1: "std", ar7: "std", ar12: "std", so5: "gy", in7: "std", in26: "std", la26: "std",
+          in30: "gy", ar11: "welder", in16: "welder", la14: "welder",
+          cr4: "upg", la27: "upg", la18: "upg"
+        },
+        base: {}
+      };
+
+      const CAT_ORDER = ["Commanders", "Creatures", "Instants", "Sorceries", "Artifacts", "Enchantments", "Lands"];
+      const CAT_LABELS = {
+        Commanders: "統率者", Creatures: "クリーチャー", Instants: "インスタント",
+        Sorceries: "ソーサリー", Artifacts: "アーティファクト", Enchantments: "エンチャント", Lands: "土地"
+      };
+
+      const STORAGE_KEY = "saikura_csv_custom_v3";
+
+      // Default Owned: All 92 non-proxy cards from クラサイ.csv are pre-owned!
+      function getDefaultOwned() {
+        const map = {};
+        BASE_DECK.forEach(c => {
+          if (!c.proxy) map[c.id] = true;
+        });
+        return map;
+      }
+
+      let state = {
+        activePreset: "planA",
+        choices: Object.assign({}, PRESETS.planA), // baseId -> option key (or undefined for base card)
+        ownedMap: getDefaultOwned(),               // card key (baseId or en name) -> true
+        catFilter: "ALL",
+        searchQuery: "",
+        stormCount: 0,
+        winFlips: 0
+      };
+
+      function loadStorage() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const p = JSON.parse(raw);
+            if (p && p.choices) {
+              state.activePreset = p.activePreset || "custom";
+              state.choices = p.choices;
+              state.ownedMap = p.ownedMap || getDefaultOwned();
+            }
+          }
+        } catch (_) {}
+      }
+
+      function saveStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            activePreset: state.activePreset,
+            choices: state.choices,
+            ownedMap: state.ownedMap
+          }));
+        } catch (_) {}
+      }
+
+      function fmtYen(n) {
+        return "¥" + Math.round(n).toLocaleString("ja-JP");
+      }
+
+      function showToast(msg) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => el.classList.remove("show"), 2100);
+      }
+
+      function computeDeck() {
+        const finalCards = [];
+        const changedPairs = [];
+        let totalBuyJpy = 0;
+        let buyCount = 0;
+        let remainingProxies = 0;
+
+        BASE_DECK.forEach(base => {
+          const selKey = state.choices[base.id];
+          const slotCfg = SLOT_OPTIONS[base.id];
+          let chosenOpt = null;
+          if (selKey && slotCfg) {
+            chosenOpt = slotCfg.opts.find(o => o.key === selKey) || null;
+          }
+
+          if (chosenOpt) {
+            const ownKey = "rep:" + chosenOpt.en;
+            const isOwned = !!state.ownedMap[ownKey];
+            const outCost = isOwned ? 0 : chosenOpt.jpy;
+            totalBuyJpy += outCost;
+            if (outCost > 0) buyCount++;
+
+            finalCards.push({
+              baseId: base.id,
+              ownKey: ownKey,
+              en: chosenOpt.en,
+              jp: chosenOpt.jp,
+              cat: chosenOpt.cat,
+              mv: chosenOpt.mv,
+              jpy: chosenOpt.jpy,
+              outPocket: outCost,
+              isRep: true,
+              isOwned: isOwned,
+              proxy: false,
+              gyTag: !!chosenOpt.gyTag,
+              origJp: base.jp,
+              origEn: base.en,
+              origProxy: !!base.proxy,
+              reason: chosenOpt.reason,
+              landColors: chosenOpt.landColors || null,
+              fastMana: !!chosenOpt.fastMana,
+              engine: !!chosenOpt.engine,
+              tutor: !!chosenOpt.tutor,
+              zeroArt: !!chosenOpt.zeroArt
+            });
+            changedPairs.push({ base: base, rep: chosenOpt });
+          } else {
+            const ownKey = base.id;
+            const isOwned = !!state.ownedMap[ownKey];
+            const isProxyActive = !!base.proxy && !isOwned;
+            if (isProxyActive) remainingProxies++;
+
+            finalCards.push({
+              baseId: base.id,
+              ownKey: ownKey,
+              en: base.en,
+              jp: base.jp,
+              cat: base.cat,
+              mv: base.mv,
+              jpy: base.jpy,
+              outPocket: 0, // Base cards are either owned or currently proxied unless user unchecks
+              isRep: false,
+              isOwned: isOwned,
+              proxy: isProxyActive,
+              printWarn: base.printWarn || null,
+              hasSlot: !!slotCfg,
+              landColors: base.landColors || null,
+              fastMana: !!base.fastMana,
+              engine: !!base.engine,
+              tutor: !!base.tutor,
+              zeroArt: !!base.zeroArt
+            });
+          }
+        });
+
+        return {
+          finalCards,
+          changedPairs,
+          totalBuyJpy,
+          buyCount,
+          remainingProxies
+        };
+      }
+
+      function renderAll() {
+        const res = computeDeck();
+        const { finalCards, changedPairs, totalBuyJpy, buyCount, remainingProxies } = res;
+
+        // Non-land MV stats (mean, median, max)
+        const nonLands = finalCards.filter(c => c.cat !== "Lands" && c.cat !== "Commanders").map(c => c.mv).sort((a, b) => a - b);
+        const avgMv = nonLands.reduce((s, v) => s + v, 0) / nonLands.length;
+        const mid = Math.floor(nonLands.length / 2);
+        const medianMv = nonLands.length % 2 !== 0 ? nonLands[mid] : (nonLands[mid - 1] + nonLands[mid]) / 2;
+        const maxMv = nonLands[nonLands.length - 1] || 0;
+
+        // Land colors
+        const lands = finalCards.filter(c => c.cat === "Lands");
+        let u = 0, b = 0, r = 0;
+        lands.forEach(l => {
+          if (!l.landColors) return;
+          if (l.landColors.indexOf("U") >= 0) u++;
+          if (l.landColors.indexOf("B") >= 0) b++;
+          if (l.landColors.indexOf("R") >= 0) r++;
+        });
+
+        const uniq = new Set(finalCards.map(c => c.en));
+        const singletonOk = uniq.size === 100;
+
+        // Top Bar
+        document.getElementById("hdrTotalCost").textContent = fmtYen(totalBuyJpy);
+        const proxyPill = document.getElementById("hdrProxyPill");
+        if (remainingProxies === 0) {
+          proxyPill.className = "pill pill-green";
+          proxyPill.textContent = "プロキシ 0枚 (全実物)";
+        } else {
+          proxyPill.className = "pill pill-red";
+          proxyPill.textContent = "残プロキシ " + remainingProxies + "枚";
+        }
+        document.getElementById("hdrSwapPill").textContent = "入替 " + changedPairs.length + "枚";
+        document.getElementById("navSwapBadge").textContent = changedPairs.length;
+
+        // KPIs
+        document.getElementById("kpiCost").textContent = fmtYen(totalBuyJpy);
+        document.getElementById("kpiBuyCount").textContent = "新規購入 " + buyCount + "枚 (実物92枚¥0)";
+        const kpiProx = document.getElementById("kpiProxies");
+        kpiProx.textContent = remainingProxies + "枚 / " + changedPairs.length + "枠";
+        kpiProx.style.color = remainingProxies === 0 ? "#6ee7b7" : "#fca5a5";
+        document.getElementById("kpiSingleton").textContent = singletonOk ? "100枚ハイランダー適合" : "重複あり注意";
+        document.getElementById("kpiMv").textContent = avgMv.toFixed(2) + " (" + medianMv.toFixed(1) + ")";
+        document.getElementById("kpiMaxMv").textContent = "最大MV " + maxMv + " / 非土地" + nonLands.length + "枚";
+        document.getElementById("kpiColors").textContent = "青" + u + " / 黒" + b + " / 赤" + r + " (" + lands.length + "枚)";
+
+        // Sync Preset highlight
+        document.querySelectorAll(".preset-btn").forEach(btn => {
+          btn.classList.toggle("selected", btn.getAttribute("data-preset") === state.activePreset);
+        });
+
+        renderDiagnostics(finalCards, totalBuyJpy, remainingProxies);
+        renderComboGuide(finalCards);
+        renderSlotsTab();
+        renderDeckTab(finalCards);
+      }
+
+      function renderDiagnostics(finalCards, totalBuyJpy, remainingProxies) {
+        const hasEntomb = finalCards.some(c => c.en === "Entomb");
+        const hasReanimate = finalCards.some(c => c.en === "Reanimate");
+        const hasWelder = finalCards.some(c => c.en === "Goblin Welder");
+        const hasBroodlord = finalCards.some(c => c.en === "Hoarding Broodlord");
+        const hasStation = finalCards.some(c => c.en === "Grinding Station");
+        const hasLED = finalCards.some(c => c.en === "Lion's Eye Diamond");
+        const warnPrints = finalCards.filter(c => c.printWarn);
+
+        const diags = [];
+        if (remainingProxies === 0) {
+          diags.push({
+            cls: "diag-ok",
+            title: "プロキシ8枚 完全解消済（追加費用 " + fmtYen(totalBuyJpy) + "）",
+            body: "すべてのカードが実物構築に移行できています。"
+          });
+        } else {
+          diags.push({
+            cls: "diag-danger",
+            title: "未解消のプロキシが " + remainingProxies + "枚 残っています",
+            body: "公認大会用に組む場合は「差替・墓地枠」タブで赤いPROXY枠を代替カードへ切り替えてください。"
+          });
+        }
+
+        if (hasEntomb && hasReanimate && hasWelder) {
+          diags.push({
+            cls: "diag-info",
+            title: "墓地パッケージ稼働中：【城塞溶接＆軽量リアニメイト型】",
+            body: "《納墓》＋《再活性》で《ビビ》《嵐窯》を1T着地でき、《納墓》＋《ゴブリンの溶接工》で既存の《ボーラスの城塞》を実質2マナで戦場に出せます。"
+          });
+        } else if (hasEntomb && hasReanimate && hasBroodlord) {
+          diags.push({
+            cls: "diag-info",
+            title: "墓地パッケージ稼働中：【貯蔵する親竜 4マナ即死コンボ型】",
+            body: "《納墓》＋《再活性》＋召集《真っ二つ》＋《燔祭》により統率者不在でも{2}{B}{B}から確定勝利します（※親竜リアニメイト時の8点ライフロスに注意）。"
+          });
+        }
+
+        if (hasStation) {
+          diags.push({
+            cls: "diag-ok",
+            title: "LED抜き《死の国からの脱出》ループ成立：《研磨基地》搭載",
+            body: "《死の国からの脱出》＋《研磨基地》＋《水蓮の花びら》または《極楽の外套》（ウルザの物語でサーチ可）で決定論的無限切削＆マナ生成が成立します。"
+          });
+        } else if (hasLED) {
+          diags.push({
+            cls: "diag-warn",
+            title: "《ライオンの瞳のダイアモンド》(プロキシ) 使用中",
+            body: "LEDを抜く場合は《研磨基地》への切り替えで脱出ループを維持できます。"
+          });
+        }
+
+        if (warnPrints.length > 0) {
+          diags.push({
+            cls: "diag-warn",
+            title: "CSV上の版コード確認：" + warnPrints.map(w => w.jp).join("・"),
+            body: "CSV上で 30a (30th Anniversary) または olep (大判) として登録されています。実物が通常黒枠/白枠であれば公認大会で問題なく使用可能です。"
+          });
+        }
+
+        document.getElementById("diagContainer").innerHTML = diags.map(d =>
+          '<div class="diag-item ' + d.cls + '"><div class="diag-title">' + d.title + '</div><div class="sub-text" style="color:#e2e8f0;">' + d.body + '</div></div>'
+        ).join("");
+      }
+
+      function renderComboGuide(finalCards) {
+        const hasEntomb = finalCards.some(c => c.en === "Entomb");
+        const hasWelder = finalCards.some(c => c.en === "Goblin Welder");
+        const hasBrood = finalCards.some(c => c.en === "Hoarding Broodlord");
+        const hasStation = finalCards.some(c => c.en === "Grinding Station");
+
+        const boxes = [];
+        if (hasEntomb && hasWelder) {
+          boxes.push({
+            t: "① 納墓＋ゴブリンの溶接工 → 《ボーラスの城塞》2マナ起動",
+            b: "《納墓》({B})で《ボーラスの城塞》を墓地へ送り、《ゴブリンの溶接工》({R})を起動して戦場の宝物・《水蓮の花びら》・《極楽の外套》・《苛立たしいガラクタ》のいずれかと入れ替え、6マナを踏み倒して城塞を着地させます。"
+          });
+        }
+        if (hasEntomb && hasBrood) {
+          boxes.push({
+            t: "① 納墓＋再活性 → 《貯蔵する親竜》4マナ({2}{B}{B})確定即死手順",
+            b: "1.《納墓》で《貯蔵する親竜》を墓地へ→《再活性》(8点ロス)で釣る→ETBで《真っ二つ》追放。 2.親竜をタップ(召集{B})＋{2}で《真っ二つ》→親竜トークンA・B生成、ETBで《燔祭》と《死の国からの脱出》追放。 3.トークンAをタップ(召集{B})して自身(MV8)を生け贄に《燔祭》→赤黒8マナ生成。 4.《死の国からの脱出》を着地させ、トークンB召集＋2マナで《真っ二つ》を脱出→《水蓮の花びら》と《研磨基地》を揃えて無限切削から《タッサの神託者》で勝利！"
+          });
+        }
+        if (hasStation) {
+          boxes.push({
+            t: "② 《死の国からの脱出》＋《研磨基地》＋0マナファクト無限切削",
+            b: "戦場に《死の国からの脱出》と《研磨基地》を揃え、《水蓮の花びら》（または《ウルザの物語》から出した《極楽の外套》）で自分を3枚切削→墓地3枚追放で0マナファクトを脱出→研磨基地アンタップを繰り返し、山札を掘り切って《タッサの神託者》で勝利します。"
+          });
+        }
+        boxes.push({
+          t: "③ クラーク＋《納墓》／《再活性》／《Demonic Consultation》倍化テク",
+          b: "クラーク下で《納墓》に勝てば2枚同時墓地送り（例：城塞＋魔法使いの杖）、《再活性》に勝てば自軍エンジンと相手生物の2体同時奪取（負けてもライフロス0で手札回収）、《Demonic Consultation》《汚れた契約》ならコピーで《タッサの神託者》を手札に加えて本体で山札全追放から即勝利します。"
+        });
+
+        document.getElementById("comboGuideBox").innerHTML = boxes.map(x =>
+          '<div class="combo-box"><div class="combo-title">' + x.t + '</div><div class="sub-text" style="color:#e2e8f0;">' + x.b + '</div></div>'
+        ).join("");
+      }
+
+      function renderSlotsTab() {
+        const el = document.getElementById("slotsContainer");
+        const slotIds = Object.keys(SLOT_OPTIONS);
+        let html = "";
+        let lastGroup = "";
+
+        slotIds.forEach(id => {
+          const base = BASE_DECK.find(c => c.id === id);
+          const cfg = SLOT_OPTIONS[id];
+          const curSel = state.choices[id] || null;
+
+          if (cfg.group !== lastGroup) {
+            lastGroup = cfg.group;
+            html += '<div class="deck-group-header" style="font-size:13px; color:#93c5fd; margin-top:6px;"><span>■ ' + lastGroup + '</span></div>';
+          }
+
+          const baseBadge = base.proxy
+            ? '<span class="pill pill-red">元: PROXY</span>'
+            : '<span class="pill">元: 実物所持</span>';
+
+          html += '<div class="slot-card">';
+          html += '<div class="slot-header"><span class="slot-base-title">元枠：《' + base.jp + '》</span>' + baseBadge + '</div>';
+          html += '<div class="option-btn-group">';
+
+          cfg.opts.forEach(opt => {
+            const isAct = curSel === opt.key;
+            const gyPill = opt.gyTag ? ' <span class="pill pill-purple" style="font-size:10px; padding:1px 6px;">墓地軸</span>' : '';
+            html += (
+              '<button type="button" class="opt-choice-btn ' + (isAct ? 'active-opt' : '') + '" data-slot="' + id + '" data-opt="' + opt.key + '">' +
+                '<div class="opt-top-line">' +
+                  '<span>' + (isAct ? '● ' : '○ ') + 'IN: ' + opt.jp + ' / ' + opt.en + gyPill + '</span>' +
+                  '<span style="color:#6ee7b7;">' + fmtYen(opt.jpy) + '</span>' +
+                '</div>' +
+                '<div class="opt-reason-line">' + opt.reason + '</div>' +
+              '</button>'
+            );
+          });
+
+          const isBaseAct = !curSel;
+          html += (
+            '<button type="button" class="opt-choice-btn ' + (isBaseAct ? 'active-base' : '') + '" data-slot="' + id + '" data-opt="BASE">' +
+              '<div class="opt-top-line">' +
+                '<span>' + (isBaseAct ? '● ' : '○ ') + '変更せず維持：《' + base.jp + '》</span>' +
+                '<span style="color:' + (base.proxy ? '#fca5a5' : '#94a3b8') + ';">' + (base.proxy ? 'PROXY残存' : '¥0 (所持)') + '</span>' +
+              '</div>' +
+            '</button>'
+          );
+
+          html += '</div></div>';
+        });
+
+        el.innerHTML = html;
+      }
+
+      function renderDeckTab(finalCards) {
+        const container = document.getElementById("deckListContainer");
+        const q = state.searchQuery.trim().toLowerCase();
+        const cf = state.catFilter;
+
+        let html = "";
+        CAT_ORDER.forEach(cat => {
+          if (cf !== "ALL" && cf !== "BUY" && cf !== cat) return;
+          const group = finalCards.filter(c => c.cat === cat).filter(c => {
+            if (cf === "BUY" && c.outPocket === 0) return false;
+            if (!q) return true;
+            const proxyText = c.proxy ? "proxy プロキシ" : "";
+            const gyText = c.gyTag ? "墓地" : "";
+            return c.jp.toLowerCase().indexOf(q) >= 0 ||
+                   c.en.toLowerCase().indexOf(q) >= 0 ||
+                   (c.origJp && c.origJp.toLowerCase().indexOf(q) >= 0) ||
+                   proxyText.indexOf(q) >= 0 ||
+                   gyText.indexOf(q) >= 0;
+          });
+          if (group.length === 0) return;
+
+          const subTotal = group.reduce((s, c) => s + c.outPocket, 0);
+          html += '<div class="deck-group-header"><span>' + CAT_LABELS[cat] + ' (' + group.length + '枚)</span><span>追加費 ' + fmtYen(subTotal) + '</span></div>';
+
+          group.forEach(card => {
+            let badges = "";
+            if (card.proxy) badges += ' <span class="pill pill-red" style="font-size:10px; padding:1px 6px;">PROXY</span>';
+            if (card.isRep) badges += ' <span class="pill pill-blue" style="font-size:10px; padding:1px 6px;">元:' + card.origJp + '</span>';
+            if (card.gyTag) badges += ' <span class="pill pill-purple" style="font-size:10px; padding:1px 6px;">墓地軸</span>';
+            if (card.printWarn) badges += ' <span class="pill pill-amber" style="font-size:10px; padding:1px 6px;">版確認:' + card.printWarn + '</span>';
+
+            let priceLabel = "";
+            let priceColor = "#6ee7b7";
+            if (card.proxy) {
+              priceLabel = "プロキシ中";
+              priceColor = "#fca5a5";
+            } else if (card.outPocket === 0) {
+              priceLabel = "¥0 (所持)";
+              priceColor = "#6ee7b7";
+            } else {
+              priceLabel = fmtYen(card.jpy) + " (購入)";
+              priceColor = "#93c5fd";
+            }
+
+            let jumpBtn = "";
+            if (card.isRep || card.hasSlot) {
+              jumpBtn = '<button type="button" class="mini-action-btn" data-jump-slot="' + card.baseId + '">候補変更</button>';
+            }
+
+            html += (
+              '<div class="deck-item">' +
+                '<div class="deck-item-left">' +
+                  '<label class="owned-check-wrap" title="手元に実物を手に入れたらチェックすると¥0になります">' +
+                    '<input type="checkbox" ' + (card.isOwned ? 'checked' : '') + ' data-own-key="' + card.ownKey + '" />' +
+                    '<span>実物</span>' +
+                  '</label>' +
+                  '<div class="card-main-info">' +
+                    '<div class="card-jp">' + card.jp + badges + '</div>' +
+                    '<div class="card-en">' + card.en + ' (MV:' + card.mv + ')</div>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="deck-item-right">' +
+                  '<span class="card-price" style="color:' + priceColor + ';">' + priceLabel + '</span>' +
+                  jumpBtn +
+                '</div>' +
+              '</div>'
+            );
+          });
+        });
+
+        container.innerHTML = html || '<div class="card"><p class="sub-text" style="text-align:center;">該当するカードがありません。</p></div>';
+      }
+
+      function drawHand() {
+        const { finalCards } = computeDeck();
+        const pool = finalCards.filter(c => c.cat !== "Commanders").slice();
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+        }
+        const hand = pool.slice(0, 7);
+        const lands = hand.filter(c => c.cat === "Lands").length;
+        const fast = hand.filter(c => c.fastMana).length;
+        const hasRedOrBlack = hand.some(c => c.landColors && (c.landColors.indexOf("R") >= 0 || c.landColors.indexOf("B") >= 0));
+        const eng = hand.filter(c => c.engine || c.tutor || c.gyTag).length;
+
+        const vEl = document.getElementById("handVerdict");
+        if (lands >= 2 && lands <= 4 && hasRedOrBlack && (eng >= 1 || fast >= 1)) {
+          vEl.className = "diag-item diag-ok";
+          vEl.innerHTML = '<div class="diag-title">推奨判定：【キープ圏内】</div><div class="sub-text" style="color:#e2e8f0;">土地' + lands + '枚・加速' + fast + '枚・エンジン/墓地/サーチ' + eng + '枚。安定した初動が見込めます。</div>';
+        } else if (lands >= 1 && fast >= 2 && eng >= 1) {
+          vEl.className = "diag-item diag-info";
+          vEl.innerHTML = '<div class="diag-title">推奨判定：【高速仕掛けキープ】</div><div class="sub-text" style="color:#e2e8f0;">土地' + lands + '枚＋高速マナ' + fast + '枚＋エンジン/サーチ' + eng + '枚で1〜2T始動が狙えます。</div>';
+        } else {
+          vEl.className = "diag-item diag-warn";
+          vEl.innerHTML = '<div class="diag-title">推奨判定：【マリガン推奨】</div><div class="sub-text" style="color:#e2e8f0;">土地' + lands + '枚・加速' + fast + '枚・エンジン/サーチ' + eng + '枚。マナ基盤または後続が不足しています。</div>';
+        }
+
+        document.getElementById("handGrid").innerHTML = hand.map(c =>
+          '<div class="hand-card-row"><div><strong>' + c.jp + '</strong><span style="display:block; font-size:11px; color:var(--muted);">' + CAT_LABELS[c.cat] + ' (MV:' + c.mv + ')</span></div>' +
+          (c.isRep ? '<span class="pill pill-blue">新規枠</span>' : '<span class="pill">所持枠</span>') + '</div>'
+        ).join("");
+      }
+
+      function runKrarkFlip() {
+        const n = Number(document.getElementById("selTriggers").value) || 1;
+        const mode = document.getElementById("selThumbMode").value;
+        state.stormCount += 1;
+        let copies = 0;
+        let bounced = false;
+        const logs = [];
+
+        for (let i = 1; i <= n; i++) {
+          if (mode === "none") {
+            const win = Math.random() < 0.5;
+            if (win) { copies++; state.winFlips++; logs.push("誘発" + i + ":表(コピー)"); }
+            else { bounced = true; logs.push("誘発" + i + ":裏(回収)"); }
+          } else {
+            const c1 = Math.random() < 0.5;
+            const c2 = Math.random() < 0.5;
+            let chosenWin = false;
+            if (c1 && c2) chosenWin = true;
+            else if (!c1 && !c2) chosenWin = false;
+            else {
+              if (mode === "copy") chosenWin = true;
+              else {
+                if (copies === 0) chosenWin = true;
+                else if (!bounced) chosenWin = false;
+                else chosenWin = true;
+              }
+            }
+            if (chosenWin) { copies++; state.winFlips++; logs.push("誘発" + i + ":勝"); }
+            else { bounced = true; logs.push("誘発" + i + ":負"); }
+          }
+        }
+
+        document.getElementById("lblStormCount").textContent = state.stormCount;
+        document.getElementById("lblWinFlips").textContent = state.winFlips + " (宝物" + (state.winFlips * 2) + "個)";
+        let summary = "";
+        if (copies > 0 && bounced) summary = "【ループ成立！】コピー " + copies + "回解決 ＋ 本体は手札へ回収";
+        else if (copies > 0 && !bounced) summary = "【全勝解決】コピー " + copies + "回 ＋ 本体も解決（計" + (copies + 1) + "回）";
+        else summary = "【不発・回収】コピー0回・本体を手札へ戻す（ライフロスなし）";
+
+        document.getElementById("flipDetailText").innerHTML =
+          summary + '<div style="font-size:11px; font-weight:400; color:var(--muted); margin-top:4px;">' + logs.join(" / ") + '</div>';
+      }
+
+      function copyTextRobust(text, toastMsg) {
+        const area = document.getElementById("txtExport");
+        area.value = text;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => showToast(toastMsg)).catch(() => fallbackSelect(area, toastMsg));
+        } else {
+          fallbackSelect(area, toastMsg);
+        }
+      }
+
+      function fallbackSelect(area, toastMsg) {
+        area.focus();
+        area.select();
+        area.setSelectionRange(0, 999999);
+        try { document.execCommand("copy"); } catch (_) {}
+        showToast(toastMsg);
+      }
+
+      // Events
+      document.addEventListener("click", function (e) {
+        const navBtn = e.target.closest(".nav-btn");
+        if (navBtn) {
+          const tab = navBtn.getAttribute("data-tab");
+          document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b === navBtn));
+          document.querySelectorAll(".tab-view").forEach(v => v.classList.remove("active"));
+          document.getElementById("view-" + tab).classList.add("active");
+          window.scrollTo(0, 0);
+          return;
+        }
+
+        const presetBtn = e.target.closest(".preset-btn");
+        if (presetBtn) {
+          const p = presetBtn.getAttribute("data-preset");
+          state.activePreset = p;
+          state.choices = Object.assign({}, PRESETS[p] || {});
+          saveStorage();
+          renderAll();
+          drawHand();
+          showToast("プランを適用しました");
+          return;
+        }
+
+        const optBtn = e.target.closest(".opt-choice-btn");
+        if (optBtn) {
+          const slotId = optBtn.getAttribute("data-slot");
+          const optKey = optBtn.getAttribute("data-opt");
+          state.activePreset = "custom";
+          if (optKey === "BASE") delete state.choices[slotId];
+          else state.choices[slotId] = optKey;
+          saveStorage();
+          renderAll();
+          return;
+        }
+
+        const jumpBtn = e.target.closest("[data-jump-slot]");
+        if (jumpBtn) {
+          document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.getAttribute("data-tab") === "swaps"));
+          document.querySelectorAll(".tab-view").forEach(v => v.classList.remove("active"));
+          document.getElementById("view-swaps").classList.add("active");
+          window.scrollTo(0, 0);
+          return;
+        }
+
+        const chipBtn = e.target.closest(".chip-btn");
+        if (chipBtn) {
+          state.catFilter = chipBtn.getAttribute("data-cat");
+          document.querySelectorAll(".chip-btn").forEach(c => c.classList.toggle("active", c === chipBtn));
+          renderDeckTab(computeDeck().finalCards);
+          return;
+        }
+      });
+
+      document.addEventListener("change", function (e) {
+        if (e.target.matches("input[data-own-key]")) {
+          const k = e.target.getAttribute("data-own-key");
+          if (e.target.checked) state.ownedMap[k] = true;
+          else delete state.ownedMap[k];
+          saveStorage();
+          renderAll();
+        }
+      });
+
+      document.getElementById("inpSearch").addEventListener("input", function (e) {
+        state.searchQuery = e.target.value;
+        renderDeckTab(computeDeck().finalCards);
+      });
+
+      document.getElementById("btnCastFlip").addEventListener("click", runKrarkFlip);
+      document.getElementById("btnResetStorm").addEventListener("click", function () {
+        state.stormCount = 0; state.winFlips = 0;
+        document.getElementById("lblStormCount").textContent = "0";
+        document.getElementById("lblWinFlips").textContent = "0";
+        document.getElementById("flipDetailText").textContent = "リセットしました";
+      });
+
+      document.getElementById("btnDrawHand").addEventListener("click", drawHand);
+
+      document.getElementById("btnOutShopping").addEventListener("click", function () {
+        const { finalCards, totalBuyJpy } = computeDeck();
+        const need = finalCards.filter(c => c.outPocket > 0);
+        const header = "【クラサイ 新規購入リスト (" + need.length + "枚 / 合計 " + fmtYen(totalBuyJpy) + ")】\n";
+        const body = need.map(c => "□ " + c.jp + " / " + c.en + " (" + fmtYen(c.jpy) + ")").join("\n");
+        copyTextRobust(header + body, "購入カードの買い物リストをコピーしました");
+      });
+
+      document.getElementById("btnOutMoxfield").addEventListener("click", function () {
+        const { finalCards } = computeDeck();
+        const txt = finalCards.map(c => "1 " + c.en).join("\n");
+        copyTextRobust(txt, "Moxfield用100枚英語リストをコピーしました");
+      });
+
+      document.getElementById("btnOutDiff").addEventListener("click", function () {
+        const { changedPairs, totalBuyJpy } = computeDeck();
+        const header = "【クラサイ.csv からの入替一覧 (計" + changedPairs.length + "枚 / " + fmtYen(totalBuyJpy) + ")】\n";
+        const body = changedPairs.map(p =>
+          "OUT: " + p.base.jp + (p.base.proxy ? "(PROXY)" : "") + " → IN: " + p.rep.jp + " (" + fmtYen(p.rep.jpy) + ")"
+        ).join("\n");
+        copyTextRobust(header + body, "IN/OUT変更表をコピーしました");
+      });
+
+      document.getElementById("btnShareIOS").addEventListener("click", function () {
+        const area = document.getElementById("txtExport");
+        if (!area.value) {
+          const { finalCards, totalBuyJpy } = computeDeck();
+          const need = finalCards.filter(c => c.outPocket > 0);
+          area.value = "【クラサイ購入リスト (" + need.length + "枚 / " + fmtYen(totalBuyJpy) + ")】\n" +
+            need.map(c => "□ " + c.jp + " (" + fmtYen(c.jpy) + ")").join("\n");
+        }
+        if (navigator.share) {
+          navigator.share({ title: "クラサイ最適化リスト", text: area.value }).catch(() => {});
+        } else {
+          fallbackSelect(area, "テキストを選択＆コピーしました");
+        }
+      });
+
+      document.getElementById("btnGenCode").addEventListener("click", function () {
+        const code = "KS3:" + btoa(JSON.stringify({ p: state.activePreset, c: state.choices, o: state.ownedMap }));
+        document.getElementById("inpSaveCode").value = code;
+        copyTextRobust(code, "セーブコードを生成＆コピーしました");
+      });
+
+      document.getElementById("btnLoadCode").addEventListener("click", function () {
+        const val = (document.getElementById("inpSaveCode").value || "").trim();
+        if (!val.startsWith("KS3:")) { showToast("KS3:から始まるコードを入力してください"); return; }
+        try {
+          const d = JSON.parse(atob(val.slice(4)));
+          state.activePreset = d.p || "custom";
+          state.choices = d.c || {};
+          state.ownedMap = d.o || getDefaultOwned();
+          saveStorage();
+          renderAll();
+          drawHand();
+          showToast("セーブコードから復元しました");
+        } catch (_) {
+          showToast("コードの読み込みに失敗しました");
+        }
+      });
+
+      document.getElementById("btnResetPlanA").addEventListener("click", function () {
+        state.activePreset = "planA";
+        state.choices = Object.assign({}, PRESETS.planA);
+        state.ownedMap = getDefaultOwned();
+        saveStorage();
+        renderAll();
+        drawHand();
+        showToast("推奨プランA (¥9,860) にリセットしました");
+      });
+
+      loadStorage();
+      renderAll();
+      drawHand();
+    })();
+  </script>
+</body>
+</html>
