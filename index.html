@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="サイクラ最適化" />
+  <title>サイクラ Budget Optimizer (iPhone Edition)</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #121826;
+      --card-sub: #1a2234;
+      --border: #283248;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --blue: #3b82f6;
+      --blue-bg: rgba(59, 130, 246, 0.16);
+      --green: #10b981;
+      --green-bg: rgba(16, 185, 129, 0.16);
+      --amber: #f59e0b;
+      --amber-bg: rgba(245, 158, 11, 0.16);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.16);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.45;
+      padding-top: calc(64px + var(--safe-top));
+      padding-bottom: calc(78px + var(--safe-bottom));
+      overscroll-behavior-y: none;
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+      touch-action: manipulation;
+    }
+
+    /* Sticky Top Summary Header */
+    .app-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
+      padding: calc(8px + var(--safe-top)) 14px 8px;
+      background: rgba(18, 24, 38, 0.92);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .grixis-dots {
+      display: inline-flex;
+      gap: 3px;
+    }
+
+    .grixis-dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .dot-u { background: #2563eb; }
+    .dot-b { background: #475569; border: 1px solid #94a3b8; }
+    .dot-r { background: #dc2626; }
+
+    .header-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .header-cost {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .pill-blue { background: var(--blue-bg); border-color: rgba(59,130,246,0.45); color: #93c5fd; }
+    .pill-green { background: var(--green-bg); border-color: rgba(16,185,129,0.45); color: #6ee7b7; }
+    .pill-amber { background: var(--amber-bg); border-color: rgba(245,158,11,0.45); color: #fcd34d; }
+    .pill-red { background: var(--red-bg); border-color: rgba(239,68,68,0.45); color: #fca5a5; }
+
+    /* Container */
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 12px 12px 24px;
+    }
+
+    .tab-view {
+      display: none;
+    }
+
+    .tab-view.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .sub-text {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* KPI 2x2 Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .kpi-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .kpi-val {
+      font-size: 17px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .kpi-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Preset Buttons */
+    .preset-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .preset-btn {
+      width: 100%;
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 10px 12px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .preset-btn:active {
+      transform: scale(0.99);
+      background: #222d44;
+    }
+
+    .preset-btn.selected {
+      border-color: var(--blue);
+      background: var(--blue-bg);
+    }
+
+    .preset-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .preset-desc {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .preset-price {
+      font-size: 13px;
+      font-weight: 800;
+      color: #93c5fd;
+      margin-left: 8px;
+      white-space: nowrap;
+    }
+
+    /* Sliders + Stepper Controls */
+    .slider-block {
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .slider-label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .slider-val {
+      font-size: 16px;
+      font-weight: 800;
+      color: #60a5fa;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      background: #263147;
+      border-radius: 999px;
+      outline: none;
+      margin: 8px 0;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #3b82f6;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+      cursor: pointer;
+    }
+
+    .stepper-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .btn-sm {
+      flex: 1;
+      min-height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-sub);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px 10px;
+    }
+
+    .btn-sm:active {
+      background: #283550;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #ffffff;
+    }
+
+    .btn-primary:active {
+      background: #2563eb;
+    }
+
+    .btn-green {
+      background: var(--green-bg);
+      border-color: rgba(16,185,129,0.5);
+      color: #6ee7b7;
+    }
+
+    /* Switch Toggles */
+    .toggle-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(40, 50, 72, 0.6);
+      cursor: pointer;
+    }
+
+    .toggle-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .toggle-row input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      margin-top: 2px;
+      accent-color: var(--blue);
+      flex-shrink: 0;
+    }
+
+    /* Diagnostics */
+    .diag-item {
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .diag-item:last-child { margin-bottom: 0; }
+    .diag-ok { background: var(--green-bg); border-color: rgba(16,185,129,0.4); }
+    .diag-info { background: var(--blue-bg); border-color: rgba(59,130,246,0.4); }
+    .diag-warn { background: var(--amber-bg); border-color: rgba(245,158,11,0.4); }
+
+    .diag-title {
+      font-weight: 700;
+      margin-bottom: 3px;
+      color: #ffffff;
+    }
+
+    /* Swaps List */
+    .swap-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 9px;
+    }
+
+    .swap-top {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+
+    .swap-out {
+      font-size: 12px;
+      color: #fca5a5;
+      text-decoration: line-through;
+    }
+
+    .swap-in {
+      font-size: 14px;
+      font-weight: 700;
+      color: #93c5fd;
+    }
+
+    .swap-reason {
+      font-size: 12px;
+      color: #cbd5e1;
+      background: var(--card-sub);
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 9px;
+    }
+
+    .swap-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    /* 100-Card Checklist & Filter */
+    .search-input {
+      width: 100%;
+      font-size: 16px; /* Prevents iOS Safari auto-zoom */
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card-sub);
+      color: var(--text);
+      outline: none;
+      margin-bottom: 9px;
+    }
+
+    .search-input:focus {
+      border-color: var(--blue);
+    }
+
+    .cat-chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .cat-chips::-webkit-scrollbar { display: none; }
+
+    .chip-btn {
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .chip-btn.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #ffffff;
+    }
+
+    .deck-group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      padding: 8px 4px 5px;
+    }
+
+    .deck-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 9px 11px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .deck-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .owned-check-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      min-height: 38px;
+      cursor: pointer;
+    }
+
+    .owned-check-wrap input {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--green);
+    }
+
+    .owned-check-wrap span {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    .card-main-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .card-jp {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #ffffff;
+      word-break: break-word;
+    }
+
+    .card-en {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .deck-item-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .card-price {
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+
+    .mini-action-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card-sub);
+      color: #cbd5e1;
+      font-size: 10.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Krarkulator Coin Flipper & Hand Sim */
+    .krark-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .select-box {
+      width: 100%;
+      font-size: 16px;
+      padding: 8px 10px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--card-sub);
+      color: var(--text);
+    }
+
+    .flip-result-box {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .hand-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .hand-card-row {
+      background: var(--card-sub);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 11px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    /* Export Textarea Box */
+    .export-area {
+      width: 100%;
+      height: 150px;
+      font-size: 13px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #070a12;
+      color: #e2e8f0;
+      margin-top: 8px;
+      resize: vertical;
+    }
+
+    /* Fixed Bottom Tab Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
+      background: rgba(18, 24, 38, 0.95);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border);
+      padding-bottom: var(--safe-bottom);
+    }
+
+    .bottom-nav-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      height: 60px;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .nav-btn.active {
+      color: #60a5fa;
+    }
+
+    .nav-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .nav-badge {
+      position: absolute;
+      top: 5px;
+      right: calc(50% - 22px);
+      background: var(--blue);
+      color: #ffffff;
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 999px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: calc(74px + var(--safe-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10b981;
+      color: #ffffff;
+      padding: 9px 16px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 700;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 60;
+      white-space: nowrap;
+    }
+
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Sticky Summary Bar -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div>
+        <div class="brand-row">
+          <span class="grixis-dots"><span class="dot-u"></span><span class="dot-b"></span><span class="dot-r"></span></span>
+          <span class="header-title">サイクラ予算最適化</span>
+        </div>
+        <div class="header-cost" id="hdrTotalCost">¥0</div>
+      </div>
+      <div class="header-badges">
+        <span class="pill pill-blue" id="hdrSwapPill">差替 0枚</span>
+        <span class="pill" id="hdrMvPill">MV 1.86</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- TAB 1: Budget Settings & Diagnostics -->
+    <section id="view-settings" class="tab-view active">
+      <div class="kpi-grid">
+        <div class="kpi-box">
+          <div class="kpi-label">購入必要額（未所持分）</div>
+          <div class="kpi-val" id="kpiCost">¥0</div>
+          <div class="kpi-note" id="kpiSaved" style="color:#6ee7b7;">基準比 -¥0</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-label">差替枠 / 所持0円枠</div>
+          <div class="kpi-val" id="kpiSwaps" style="color:#93c5fd;">0枚 / 0枚</div>
+          <div class="kpi-note" id="kpiSingleton">100枚ハイランダー適合</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-label">平均マナ総量 (土地除く)</div>
+          <div class="kpi-val" id="kpiMv" style="color:#fcd34d;">1.86</div>
+          <div class="kpi-note" id="kpiNaus">《むかつき》適正圏内</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-label">アンタップ色マナ源</div>
+          <div class="kpi-val" id="kpiColors" style="font-size:15px;">青-- / 黒-- / 赤--</div>
+          <div class="kpi-note">《汚れた契約》阻害なし</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <span>1. ワンタップ予算プリセット</span>
+          <span class="sub-text">基準: Fuentes 2026準優勝</span>
+        </div>
+        <div class="preset-list">
+          <button type="button" class="preset-btn selected" data-preset="norl">
+            <div>
+              <div class="preset-name">デュアラン・再録禁止 完全除外</div>
+              <div class="preset-desc">RL7枚のみ置換・約110万円コスト削減</div>
+            </div>
+            <span class="preset-price">~¥328,000</span>
+          </button>
+          <button type="button" class="preset-btn" data-preset="comp20">
+            <div>
+              <div class="preset-name">実用競技ライン（単価1.2万円未満）</div>
+              <div class="preset-desc">高額モックス・墳墓・玉璽まで最適化</div>
+            </div>
+            <span class="preset-price">~¥188,000</span>
+          </button>
+          <button type="button" class="preset-btn" data-preset="mid10">
+            <div>
+              <div class="preset-name">ミドル予算cEDH（目標10万円）</div>
+              <div class="preset-desc">ビビ・壊し屋・汚れた契約・タッサ維持</div>
+            </div>
+            <span class="preset-price">~¥100,000</span>
+          </button>
+          <button type="button" class="preset-btn" data-preset="entry5">
+            <div>
+              <div class="preset-name">エントリーcEDH（目標5.5万円）</div>
+              <div class="preset-desc">最小予算で脱出＆神託者コンボ完遂</div>
+            </div>
+            <span class="preset-price">~¥55,000</span>
+          </button>
+          <button type="button" class="preset-btn" data-preset="notier">
+            <div>
+              <div class="preset-name">フル・トーナメント（制限なし）</div>
+              <div class="preset-desc">デュアラン・LED込み基準100枚</div>
+            </div>
+            <span class="preset-price">~¥1,422,000</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">2. 予算スライダー＆除外ポリシー</div>
+
+        <div class="slider-block">
+          <div class="slider-header">
+            <span class="slider-label">購入予算の上限</span>
+            <span class="slider-val" id="lblBudget">¥330,000</span>
+          </div>
+          <input id="rngBudget" type="range" min="48000" max="1450000" step="5000" value="330000" />
+          <div class="stepper-row">
+            <button type="button" class="btn-sm" data-step-budget="-10000">-1万円</button>
+            <button type="button" class="btn-sm" data-step-budget="-5000">-5千円</button>
+            <button type="button" class="btn-sm" data-step-budget="5000">+5千円</button>
+            <button type="button" class="btn-sm" data-step-budget="10000">+1万円</button>
+          </div>
+        </div>
+
+        <div class="slider-block">
+          <div class="slider-header">
+            <span class="slider-label">1枚あたりの単価上限</span>
+            <span class="slider-val" id="lblCardCap" style="color:#6ee7b7;">上限なし</span>
+          </div>
+          <input id="rngCardCap" type="range" min="1500" max="50000" step="500" value="50000" />
+          <div class="stepper-row">
+            <button type="button" class="btn-sm" data-set-cap="3000">¥3,000上限</button>
+            <button type="button" class="btn-sm" data-set-cap="5000">¥5,000上限</button>
+            <button type="button" class="btn-sm" data-set-cap="12000">¥12,000上限</button>
+            <button type="button" class="btn-sm" data-set-cap="50000">上限解除</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="toggle-row">
+            <div>
+              <div class="preset-name">デュアルランド3種を除外</div>
+              <div class="preset-desc">Underground Sea / Volcanic Island / Badlands を4人卓アンタップイン2色土地へ置換</div>
+            </div>
+            <input type="checkbox" id="chkNoDuals" checked />
+          </label>
+          <label class="toggle-row">
+            <div>
+              <div class="preset-name">再録禁止カード（RL）をすべて除外</div>
+              <div class="preset-desc">LED（→研磨基地でループ補完）、モックス・ダイアモンド、Wheel、裏切り者の都を除外</div>
+            </div>
+            <input type="checkbox" id="chkNoRL" checked />
+          </label>
+          <label class="toggle-row">
+            <div>
+              <div class="preset-name">核エンジン6枚を優先保護（推奨）</div>
+              <div class="preset-desc">《タッサの神託者》《汚れた契約》《水蓮の花びら》《呪詛の壊し屋》《ビルギ》《ビビ》を維持</div>
+            </div>
+            <input type="checkbox" id="chkCoreLock" checked />
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">3. コンボ・構造健全性リアルタイム診断</div>
+        <div id="diagContainer"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: Swapped Pairs -->
+    <section id="view-swaps" class="tab-view">
+      <div class="card" style="padding:11px 13px;">
+        <p class="sub-text">
+          現在の予算・ポリシーで差し替えられたスロット一覧です。すでに持っているカードは<strong style="color:#6ee7b7;">「所持(¥0)で復帰」</strong>をタップすると購入費0円で元のカードに戻ります。
+        </p>
+      </div>
+      <div id="swapsList"></div>
+    </section>
+
+    <!-- TAB 3: Full 100-Card Manager -->
+    <section id="view-deck" class="tab-view">
+      <input id="inpSearch" type="search" class="search-input" placeholder="カード名（日/英）や役割で検索..." />
+      <div class="cat-chips" id="catChips">
+        <button type="button" class="chip-btn active" data-cat="ALL">すべて(100)</button>
+        <button type="button" class="chip-btn" data-cat="OWNED">所持済のみ</button>
+        <button type="button" class="chip-btn" data-cat="Creatures">生物</button>
+        <button type="button" class="chip-btn" data-cat="Instants">インスタント</button>
+        <button type="button" class="chip-btn" data-cat="Sorceries">ソーサリー</button>
+        <button type="button" class="chip-btn" data-cat="Artifacts">ファクト</button>
+        <button type="button" class="chip-btn" data-cat="Enchantments">エンチャント</button>
+        <button type="button" class="chip-btn" data-cat="Lands">土地</button>
+      </div>
+      <div id="deckListContainer"></div>
+    </section>
+
+    <!-- TAB 4: Playtest (Krarkulator + Hand Sim) & Export -->
+    <section id="view-tools" class="tab-view">
+      <!-- Krark Coin Flip Simulator -->
+      <div class="card">
+        <div class="section-title">
+          <span>1. 実戦コイントス計算機 (Krarkulator)</span>
+          <span class="pill pill-blue">卓上ツール</span>
+        </div>
+        <p class="sub-text">盤面のクラーク誘発回数と《クラークの親指》有無に合わせて一括コイントスを行い、コピー数と本体バウンス結果を即座に判定します。</p>
+        <div class="krark-controls">
+          <div>
+            <label class="kpi-label">クラーク誘発回数</label>
+            <select id="selTriggers" class="select-box">
+              <option value="1">誘発 1回 (クラーク単体)</option>
+              <option value="2" selected>誘発 2回 (+神童 or 杖)</option>
+              <option value="3">誘発 3回 (+倍化2枚)</option>
+              <option value="4">誘発 4回 (+倍化3枚)</option>
+              <option value="5">誘発 5回</option>
+            </select>
+          </div>
+          <div>
+            <label class="kpi-label">《クラークの親指》方針</label>
+            <select id="selThumbMode" class="select-box">
+              <option value="none">親指なし (通常50%)</option>
+              <option value="loop" selected>親指あり：ループ優先</option>
+              <option value="copy">親指あり：全コピー優先</option>
+            </select>
+          </div>
+        </div>
+        <div class="stepper-row">
+          <button type="button" id="btnCastFlip" class="btn-sm btn-primary" style="min-height:42px; font-size:14px;">
+            呪文を唱えてコイントス！
+          </button>
+          <button type="button" id="btnResetStorm" class="btn-sm" style="flex:0 0 88px;">
+            リセット
+          </button>
+        </div>
+        <div class="flip-result-box" id="flipResultBox">
+          <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted);">
+            <span>現在ストーム数: <strong id="lblStormCount" style="color:#fff;">0</strong></span>
+            <span>累計勝利回数(悪漢宝物×2): <strong id="lblWinFlips" style="color:#fcd34d;">0</strong></span>
+          </div>
+          <div id="flipDetailText" style="margin-top:8px; font-size:13px; font-weight:700; color:#93c5fd;">
+            ボタンを押すとコイントス結果が表示されます
+          </div>
+        </div>
+      </div>
+
+      <!-- 7-Card Mulligan Tester -->
+      <div class="card">
+        <div class="section-title">
+          <span>2. 最適化デッキ 初手7枚マリガン練習</span>
+          <button type="button" id="btnDrawHand" class="btn-sm btn-primary" style="flex:0 0 auto; padding:5px 12px;">7枚引く</button>
+        </div>
+        <div id="handVerdict" class="diag-item diag-info"></div>
+        <div id="handGrid" class="hand-grid"></div>
+      </div>
+
+      <!-- Export & Share & Save Code -->
+      <div class="card">
+        <div class="section-title">3. リスト出力・iPhone共有・バックアップ</div>
+        <p class="sub-text" style="margin-bottom:10px;">
+          ボタンをタップすると下のテキスト枠に出力され、iPhoneの「メモ」やLINEへの共有、Moxfieldへの貼り付けが確実に行えます。
+        </p>
+        <div class="stepper-row" style="flex-wrap:wrap;">
+          <button type="button" id="btnOutMoxfield" class="btn-sm btn-primary">Moxfield英語100枚</button>
+          <button type="button" id="btnOutShopping" class="btn-sm btn-green">未所持の買い物リスト</button>
+        </div>
+        <div class="stepper-row" style="margin-top:6px;">
+          <button type="button" id="btnShareIOS" class="btn-sm">iPhone共有シートで送る</button>
+          <button type="button" id="btnSelectAll" class="btn-sm">テキストを全選択＆コピー</button>
+        </div>
+        <textarea id="txtExport" class="export-area" readonly placeholder="上のボタンを押すとここにデッキリストや買い物リストが出力されます"></textarea>
+
+        <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border);">
+          <div class="section-title" style="margin-bottom:4px;">
+            <span>所持カード・設定のセーブコード</span>
+            <button type="button" id="btnResetState" class="mini-action-btn" style="color:#fca5a5;">全初期化</button>
+          </div>
+          <p class="sub-text" style="margin-bottom:8px;">
+            ブラウザ保存に加え、以下のセーブコードをメモ帳に控えておけばいつでも所持チェック状態を復元できます。
+          </p>
+          <input id="inpSaveCode" type="text" class="search-input" style="font-size:16px; margin-bottom:6px;" placeholder="セーブコードを貼り付けて復元..." />
+          <div class="stepper-row">
+            <button type="button" id="btnGenerateCode" class="btn-sm">現在のコードを生成</button>
+            <button type="button" id="btnLoadCode" class="btn-sm btn-primary">コードから復元</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button type="button" class="nav-btn active" data-tab="settings">
+        <span class="nav-icon">⚙</span>
+        <span>予算・診断</span>
+      </button>
+      <button type="button" class="nav-btn" data-tab="swaps">
+        <span class="nav-icon">⇄</span>
+        <span>差替ペア</span>
+        <span class="nav-badge" id="navSwapBadge">0</span>
+      </button>
+      <button type="button" class="nav-btn" data-tab="deck">
+        <span class="nav-icon">☰</span>
+        <span>100枚管理</span>
+      </button>
+      <button type="button" class="nav-btn" data-tab="tools">
+        <span class="nav-icon">🎲</span>
+        <span>実戦・出力</span>
+      </button>
+    </div>
+  </nav>
+
+  <div id="toast" class="toast">コピーしました</div>
+
+  <script>
+    (function () {
+      const BASE_DECK = [
+        // Commanders (2)
+        { id: "c1", en: "Krark, the Thumbless", jp: "親指なしのクラーク", cat: "Commanders", mv: 2, jpy: 200 },
+        { id: "c2", en: "Silas Renn, Seeker Adept", jp: "求道の達人、サイラス・レン", cat: "Commanders", mv: 3, jpy: 300 },
+
+        // Creatures (12)
+        { id: "cr1", en: "Ashling, Flame Dancer", jp: "炎の踊り手、アシュリング", cat: "Creatures", mv: 4, jpy: 600, engine: true },
+        { id: "cr2", en: "Birgi, God of Storytelling // Harnfel, Horn of Bounty", jp: "語りの神、ビルギ", cat: "Creatures", mv: 3, jpy: 3800, coreLock: true, engine: true,
+          rep: { en: "Runaway Steam-Kin", jp: "暴走する蒸気族", cat: "Creatures", mv: 2, jpy: 200, engine: true, reason: "赤呪文連打から赤3マナを供給する軽量ストーム補助エンジン" } },
+        { id: "cr3", en: "Harmonic Prodigy", jp: "調和の神童", cat: "Creatures", mv: 2, jpy: 900, engine: true },
+        { id: "cr4", en: "Hexing Squelcher", jp: "呪詛の壊し屋", cat: "Creatures", mv: 2, jpy: 3200, coreLock: true,
+          rep: { en: "Defense Grid", jp: "防御の光網", cat: "Artifacts", mv: 2, jpy: 800, reason: "Rubra欧州予選リスト採用。自分のストームターンを通す保護ファクト（サイラス回収可）" } },
+        { id: "cr5", en: "Ragavan, Nimble Pilferer", jp: "敏捷なこそ泥、ラガバン", cat: "Creatures", mv: 1, jpy: 5500, fastMana: true,
+          rep: { en: "Dragon's Rage Channeler", jp: "ドラゴンの怒りの媒介者", cat: "Creatures", mv: 1, jpy: 400, engine: true, reason: "Rubraリスト採用。赤1マナ域を維持し、呪文連打から諜報1で脱出パーツを高速掘削" } },
+        { id: "cr6", en: "Simian Spirit Guide", jp: "猿人の指導霊", cat: "Creatures", mv: 3, jpy: 400, fastMana: true },
+        { id: "cr7", en: "Storm-Kiln Artist", jp: "嵐窯の芸術家", cat: "Creatures", mv: 4, jpy: 300, engine: true },
+        { id: "cr8", en: "Tavern Scoundrel", jp: "酒場の悪漢", cat: "Creatures", mv: 2, jpy: 100, engine: true },
+        { id: "cr9", en: "Thassa's Oracle", jp: "タッサの神託者", cat: "Creatures", mv: 2, jpy: 2500, coreLock: true },
+        { id: "cr10", en: "Valley Floodcaller", jp: "渓間の洪水呼び", cat: "Creatures", mv: 3, jpy: 600, engine: true },
+        { id: "cr11", en: "Veyran, Voice of Duality", jp: "双対の声、ヴェイラン", cat: "Creatures", mv: 3, jpy: 500, engine: true },
+        { id: "cr12", en: "Vivi Ornitier", jp: "迷える黒魔道士、ビビ", cat: "Creatures", mv: 3, jpy: 4800, coreLock: true, engine: true,
+          rep: { en: "Professional Face-Breaker", jp: "プロの顔壊し", cat: "Creatures", mv: 3, jpy: 500, engine: true, reason: "Rubraリスト採用。戦闘ダメージから宝物生成と衝動的ドローを両立" } },
+
+        // Instants (28)
+        { id: "in1", en: "Ad Nauseam", jp: "むかつき", cat: "Instants", mv: 5, jpy: 1500, engine: true,
+          rep: { en: "Night's Whisper", jp: "夜の囁き", cat: "Sorceries", mv: 2, jpy: 150, reason: "クラーク下で勝てば2マナ4枚ドロー、負けても手札に戻る堅実な軽量補充" } },
+        { id: "in2", en: "An Offer You Can't Refuse", jp: "断れない提案", cat: "Instants", mv: 1, jpy: 500 },
+        { id: "in3", en: "Borne Upon a Wind", jp: "風に運ばれて", cat: "Instants", mv: 2, jpy: 300 },
+        { id: "in4", en: "Brain Freeze", jp: "思考停止", cat: "Instants", mv: 2, jpy: 400 },
+        { id: "in5", en: "Cabal Ritual", jp: "陰謀団の儀式", cat: "Instants", mv: 2, jpy: 1600, fastMana: true,
+          rep: { en: "Pyretic Ritual", jp: "発熱の儀式", cat: "Instants", mv: 2, jpy: 250, fastMana: true, reason: "クラーク下でコピーして爆発的に赤マナを増やす2マナ儀式" } },
+        { id: "in6", en: "Chain of Vapor", jp: "蒸気の連鎖", cat: "Instants", mv: 1, jpy: 800 },
+        { id: "in7", en: "Culling the Weak", jp: "弱者選別", cat: "Instants", mv: 1, jpy: 1200, fastMana: true },
+        { id: "in8", en: "Dark Ritual", jp: "暗黒の儀式", cat: "Instants", mv: 1, jpy: 150, fastMana: true },
+        { id: "in9", en: "Deadly Rollick", jp: "致命的なはしゃぎ回り", cat: "Instants", mv: 4, jpy: 3800,
+          rep: { en: "Snuff Out", jp: "殺し", cat: "Instants", mv: 4, jpy: 900, reason: "Rubraリスト採用。統率者不在でもライフ4点で0マナ詠唱できる確定除去" } },
+        { id: "in10", en: "Deflecting Swat", jp: "偏向はたき", cat: "Instants", mv: 3, jpy: 12000,
+          rep: { en: "Misdirection", jp: "誤った指図", cat: "Instants", mv: 5, jpy: 600, reason: "青カード追放で統率者不在でも0マナで撃てる対象変更ピッチ妨害" } },
+        { id: "in11", en: "Demonic Consultation", jp: "Demonic Consultation", cat: "Instants", mv: 1, jpy: 1000 },
+        { id: "in12", en: "Fierce Guardianship", jp: "激情の後見", cat: "Instants", mv: 3, jpy: 8000,
+          rep: { en: "Daze", jp: "目くらまし", cat: "Instants", mv: 2, jpy: 500, reason: "Baumgartnerリスト採用。島戻し0マナで撃て、クラーク負けで手札に戻るピッチ妨害" } },
+        { id: "in13", en: "Final Fortune", jp: "最後の賭け", cat: "Instants", mv: 2, jpy: 800 },
+        { id: "in14", en: "Flare of Duplication", jp: "複製の閃光", cat: "Instants", mv: 3, jpy: 400 },
+        { id: "in15", en: "Flusterstorm", jp: "狼狽の嵐", cat: "Instants", mv: 1, jpy: 700 },
+        { id: "in16", en: "Frantic Search", jp: "大あわての捜索", cat: "Instants", mv: 3, jpy: 100 },
+        { id: "in17", en: "Gut Shot", jp: "はらわた撃ち", cat: "Instants", mv: 1, jpy: 700 },
+        { id: "in18", en: "Mental Misstep", jp: "精神的つまづき", cat: "Instants", mv: 1, jpy: 1000 },
+        { id: "in19", en: "Mindbreak Trap", jp: "精神壊しの罠", cat: "Instants", mv: 4, jpy: 1200 },
+        { id: "in20", en: "Mogg Salvage", jp: "モグの分捕り", cat: "Instants", mv: 3, jpy: 100 },
+        { id: "in21", en: "Mystical Tutor", jp: "神秘の教示者", cat: "Instants", mv: 1, jpy: 2400, tutor: true,
+          rep: { en: "Solve the Equation", jp: "方程式の求解", cat: "Sorceries", mv: 3, jpy: 350, tutor: true, reason: "直接手札に加える呪文サーチ。クラーク下で勝てば2枚同時サーチに化ける" } },
+        { id: "in22", en: "Pact of Negation", jp: "否定の契約", cat: "Instants", mv: 0, jpy: 1800,
+          rep: { en: "Miscast", jp: "誤算", cat: "Instants", mv: 1, jpy: 200, reason: "1マナ高効率カウンター。クラークのコピー誘発と重なり打ち消し合戦に強い" } },
+        { id: "in23", en: "Pyroblast", jp: "紅蓮破", cat: "Instants", mv: 1, jpy: 1000 },
+        { id: "in24", en: "Red Elemental Blast", jp: "赤霊破", cat: "Instants", mv: 1, jpy: 500 },
+        { id: "in25", en: "Slaughter Pact", jp: "殺戮の契約", cat: "Instants", mv: 0, jpy: 250 },
+        { id: "in26", en: "Surgical Extraction", jp: "外科的摘出", cat: "Instants", mv: 1, jpy: 300 },
+        { id: "in27", en: "Tainted Pact", jp: "汚れた契約", cat: "Instants", mv: 2, jpy: 4200, coreLock: true, tutor: true,
+          rep: { en: "Plunge into Darkness", jp: "闇への突入", cat: "Instants", mv: 2, jpy: 400, tutor: true, reason: "ライフ支払いで上からX枚を見て1枚手札に加える2マナインスタントサーチ" } },
+        { id: "in28", en: "Vampiric Tutor", jp: "吸血の教示者", cat: "Instants", mv: 1, jpy: 7800, tutor: true,
+          rep: { en: "Lim-Dûl's Vault", jp: "リム＝ドゥールの櫃", cat: "Instants", mv: 2, jpy: 600, tutor: true, reason: "インスタントで山札上5枚を自在に積み替える青黒の定番バジェット教示者" } },
+
+        // Sorceries (13)
+        { id: "so1", en: "Demonic Counsel", jp: "悪魔的助言", cat: "Sorceries", mv: 2, jpy: 400, tutor: true },
+        { id: "so2", en: "Demonic Tutor", jp: "悪魔の教示者", cat: "Sorceries", mv: 2, jpy: 8800, tutor: true,
+          rep: { en: "Muddle the Mixture", jp: "交錯の混乱", cat: "Instants", mv: 2, jpy: 400, tutor: true, reason: "打ち消し兼・変成{1}{U}{U}で《脱出》《タッサ》《汚れた契約》《魔法使いの杖》《研磨基地》をサーチ" } },
+        { id: "so3", en: "Diabolic Intent", jp: "悪魔の意図", cat: "Sorceries", mv: 2, jpy: 2000, tutor: true,
+          rep: { en: "Shred Memory", jp: "記憶の破片", cat: "Instants", mv: 2, jpy: 150, tutor: true, reason: "墓地対策兼・変成{1}{B}{B}であらゆる2マナ主力コンボパーツをサーチ" } },
+        { id: "so4", en: "Gamble", jp: "ギャンブル", cat: "Sorceries", mv: 1, jpy: 2400, tutor: true,
+          rep: { en: "Faithless Looting", jp: "信仰無き物あさり", cat: "Sorceries", mv: 1, jpy: 150, reason: "Rubraリスト採用。1マナで手札を整えつつ《死の国からの脱出》の墓地枚数を供給" } },
+        { id: "so5", en: "Gitaxian Probe", jp: "ギタクシア派の調査", cat: "Sorceries", mv: 1, jpy: 500 },
+        { id: "so6", en: "Imperial Seal", jp: "伝国の玉璽", cat: "Sorceries", mv: 1, jpy: 24000, tutor: true,
+          rep: { en: "Step Through", jp: "通り抜け", cat: "Sorceries", mv: 5, jpy: 100, tutor: true, reason: "Kieranリスト採用。ウィザードサイクリング{2}は打ち消されない操作で《タッサ》《神童》《ビビ》《洪水呼び》を直接サーチ" } },
+        { id: "so7", en: "Jeska's Will", jp: "ジェスカの意志", cat: "Sorceries", mv: 3, jpy: 5800, fastMana: true, engine: true,
+          rep: { en: "Desperate Ritual", jp: "捨て身の儀式", cat: "Instants", mv: 2, jpy: 300, fastMana: true, reason: "インスタント赤儀式を増量。クラーク下で勝てば+4マナ、負けても手札に戻る" } },
+        { id: "so8", en: "Mnemonic Betrayal", jp: "記憶の裏切り", cat: "Sorceries", mv: 3, jpy: 1000 },
+        { id: "so9", en: "Praetor's Grasp", jp: "法務官の掌握", cat: "Sorceries", mv: 3, jpy: 1600, tutor: true,
+          rep: { en: "Ponder", jp: "思案", cat: "Sorceries", mv: 1, jpy: 150, reason: "1マナで山札操作しつつ果敢・ストームを稼ぐ軽量キャントリップ" } },
+        { id: "so10", en: "Reanimate", jp: "再活性", cat: "Sorceries", mv: 1, jpy: 1300,
+          rep: { en: "Unearth", jp: "発掘", cat: "Sorceries", mv: 1, jpy: 100, reason: "ライフロスなしでMV3以下生物（クラーク・サイラス・ビビ・神童・タッサ・壊し屋すべて対応）を1マナ蘇生" } },
+        { id: "so11", en: "Rite of Flame", jp: "炎の儀式", cat: "Sorceries", mv: 1, jpy: 800, fastMana: true },
+        { id: "so12", en: "Strike It Rich", jp: "一攫千金", cat: "Sorceries", mv: 1, jpy: 250, fastMana: true },
+        { id: "so13", en: "Wheel of Fortune", jp: "Wheel of Fortune", cat: "Sorceries", mv: 3, jpy: 90000, rl: true, engine: true,
+          rep: { en: "Windfall", jp: "意外な授かり物", cat: "Sorceries", mv: 3, jpy: 400, engine: true, reason: "同じ3マナソーサリーの全体手札入れ替え。墓地を肥やして《死の国からの脱出》を強力支援" } },
+
+        // Artifacts (14)
+        { id: "ar1", en: "Arcane Signet", jp: "秘儀の印鑑", cat: "Artifacts", mv: 2, jpy: 100, fastMana: true },
+        { id: "ar2", en: "Chrome Mox", jp: "金属モックス", cat: "Artifacts", mv: 0, jpy: 25000, fastMana: true, zeroArt: true,
+          rep: { en: "Paradise Mantle", jp: "極楽の外套", cat: "Artifacts", mv: 0, jpy: 800, fastMana: true, zeroArt: true, reason: "Kieranリスト採用の0マナ装備品。クラークをマナクリ化し《研磨基地》＋《脱出》無限ループ用0マナ枠も兼任" } },
+        { id: "ar3", en: "Fellwar Stone", jp: "フェルウォーの石", cat: "Artifacts", mv: 2, jpy: 150, fastMana: true },
+        { id: "ar4", en: "Krark's Thumb", jp: "クラークの親指", cat: "Artifacts", mv: 2, jpy: 2500, engine: true,
+          rep: { en: "Talisman of Indulgence", jp: "耽溺のタリスマン", cat: "Artifacts", mv: 2, jpy: 350, fastMana: true, reason: "モックス削減時に不足する初動の黒・赤アンタップマナ供給を補強" } },
+        { id: "ar5", en: "Lion's Eye Diamond", jp: "ライオンの瞳のダイアモンド", cat: "Artifacts", mv: 0, jpy: 130000, rl: true, fastMana: true, zeroArt: true,
+          rep: { en: "Grinding Station", jp: "研磨基地", cat: "Artifacts", mv: 2, jpy: 1200, reason: "【重要コンボ補完】Rubraリスト採用。LED抜きでも《死の国からの脱出》＋0マナファクトや太陽の指輪で無限切削・マナ生成を成立" } },
+        { id: "ar6", en: "Lotus Petal", jp: "水蓮の花びら", cat: "Artifacts", mv: 0, jpy: 4200, coreLock: true, fastMana: true, zeroArt: true,
+          rep: { en: "Everflowing Chalice", jp: "永遠溢れの杯", cat: "Artifacts", mv: 0, jpy: 150, zeroArt: true, reason: "X=0で《研磨基地》＋《脱出》ループパーツになり、通常時は2マナファクトとしても機能" } },
+        { id: "ar7", en: "Mana Vault", jp: "魔力の櫃", cat: "Artifacts", mv: 1, jpy: 14000, fastMana: true,
+          rep: { en: "Dramatic Reversal", jp: "劇的な逆転", cat: "Instants", mv: 2, jpy: 200, fastMana: true, reason: "Baumgartner・Rubra両名採用。マナファクトを一斉に起こしクラークと脱出ターンに大量マナを生成" } },
+        { id: "ar8", en: "Mox Amber", jp: "モックス・アンバー", cat: "Artifacts", mv: 0, jpy: 12000, fastMana: true, zeroArt: true,
+          rep: { en: "Tormod's Crypt", jp: "トーモッドの墓所", cat: "Artifacts", mv: 0, jpy: 100, zeroArt: true, reason: "0マナファクト枠を維持して《研磨基地》ループ成立と対面の墓地対策（サイラス再利用可）を兼任" } },
+        { id: "ar9", en: "Mox Diamond", jp: "モックス・ダイアモンド", cat: "Artifacts", mv: 0, jpy: 170000, rl: true, fastMana: true, zeroArt: true,
+          rep: { en: "Talisman of Creativity", jp: "独創のタリスマン", cat: "Artifacts", mv: 2, jpy: 300, fastMana: true, reason: "手札の土地を失わずに青・赤マナを供給しクラーク・ビビ・杖を支える" } },
+        { id: "ar10", en: "Mox Opal", jp: "オパールのモックス", cat: "Artifacts", mv: 0, jpy: 30000, fastMana: true, zeroArt: true,
+          rep: { en: "Talisman of Dominance", jp: "威圧のタリスマン", cat: "Artifacts", mv: 2, jpy: 400, fastMana: true, reason: "Rubraリスト採用。金属術未達成リスクをなくし確実に青・黒マナを供給" } },
+        { id: "ar11", en: "Sol Ring", jp: "太陽の指輪", cat: "Artifacts", mv: 1, jpy: 200, fastMana: true },
+        { id: "ar12", en: "Springleaf Drum", jp: "バネ葉の太鼓", cat: "Artifacts", mv: 1, jpy: 100, fastMana: true },
+        { id: "ar13", en: "Wishclaw Talisman", jp: "願い爪のタリスマン", cat: "Artifacts", mv: 2, jpy: 350, tutor: true },
+        { id: "ar14", en: "Wizard's Staff", jp: "魔法使いの杖", cat: "Artifacts", mv: 2, jpy: 660, engine: true },
+
+        // Enchantments (5)
+        { id: "en1", en: "Copy Enchantment", jp: "エンチャント複製", cat: "Enchantments", mv: 3, jpy: 300, engine: true },
+        { id: "en2", en: "Mystic Remora", jp: "神秘的負荷", cat: "Enchantments", mv: 1, jpy: 1600, engine: true,
+          rep: { en: "Submerge", jp: "水没", cat: "Instants", mv: 5, jpy: 400, reason: "Baumgartner・Rubra採用の0マナ妨害。邪魔なスタックス生物を山札トップへ戻す" } },
+        { id: "en3", en: "Necropotence", jp: "ネクロポーテンス", cat: "Enchantments", mv: 3, jpy: 5000, engine: true,
+          rep: { en: "Steal Enchantment", jp: "エンチャント奪取", cat: "Enchantments", mv: 2, jpy: 900, engine: true, reason: "Baumgartner・Kieran採用。BBB拘束を回避しつつ対面のリス研等を2マナで奪う" } },
+        { id: "en4", en: "Rhystic Study", jp: "リスティックの研究", cat: "Enchantments", mv: 3, jpy: 9000, engine: true,
+          rep: { en: "Archmage Emeritus", jp: "名誉教授", cat: "Creatures", mv: 4, jpy: 600, engine: true, reason: "Baumgartner採用のウィザード（通り抜け対応）。クラークで呪文が戻っても魔技ドローが毎回誘発" } },
+        { id: "en5", en: "Underworld Breach", jp: "死の国からの脱出", cat: "Enchantments", mv: 2, jpy: 900 },
+
+        // Lands (26)
+        { id: "la1", en: "Ancient Tomb", jp: "古えの墳墓", cat: "Lands", mv: 0, jpy: 25000, landColors: ["C"], fastMana: true,
+          rep: { en: "Exotic Orchard", jp: "風変わりな果樹園", cat: "Lands", mv: 0, jpy: 150, landColors: ["U","B","R"], reason: "Rubra・Kieran採用。cEDH卓ではほぼ無条件で青黒赤すべてが出るアンタップイン土地" } },
+        { id: "la2", en: "Arid Mesa", jp: "乾燥台地", cat: "Lands", mv: 0, jpy: 4200, landColors: ["U","B","R"],
+          rep: { en: "Island", jp: "島", cat: "Lands", mv: 0, jpy: 50, landColors: ["U"], reason: "《汚れた契約》条件を守る1枚挿し基本島。《目くらまし》や《血染めの月》ケアに対応" } },
+        { id: "la3", en: "Badlands", jp: "Badlands", cat: "Lands", mv: 0, jpy: 110000, dual: true, rl: true, landColors: ["B","R"],
+          rep: { en: "Luxury Suite", jp: "贅沢のスイート", cat: "Lands", mv: 0, jpy: 1200, landColors: ["B","R"], reason: "Kieranリスト採用。4人卓で確定アンタップインする黒赤クラウドランド" } },
+        { id: "la4", en: "Blood Crypt", jp: "血の墓所", cat: "Lands", mv: 0, jpy: 1200, landColors: ["B","R"],
+          rep: { en: "Graven Cairns", jp: "偶像の石塚", cat: "Lands", mv: 0, jpy: 250, landColors: ["B","R"], reason: "アンタップインで黒赤の色拘束を滑らかに満たすフィルターランド" } },
+        { id: "la5", en: "Bloodstained Mire", jp: "血染めのぬかるみ", cat: "Lands", mv: 0, jpy: 2800, landColors: ["U","B","R"],
+          rep: { en: "Mountain", jp: "山", cat: "Lands", mv: 0, jpy: 50, landColors: ["R"], reason: "《汚れた契約》対応の1枚挿し基本山。《モグの分捕り》0マナ条件と境界ランド条件を満たす" } },
+        { id: "la6", en: "City of Brass", jp: "真鍮の都", cat: "Lands", mv: 0, jpy: 1500, landColors: ["U","B","R"],
+          rep: { en: "Darkslick Shores", jp: "闇滑りの岸", cat: "Lands", mv: 0, jpy: 400, landColors: ["U","B"], reason: "1〜3ターン目に無傷でアンタップインする青黒ファストランド" } },
+        { id: "la7", en: "City of Traitors", jp: "裏切り者の都", cat: "Lands", mv: 0, jpy: 80000, rl: true, landColors: ["C"], fastMana: true,
+          rep: { en: "Crystal Vein", jp: "水晶鉱脈", cat: "Lands", mv: 0, jpy: 300, landColors: ["C"], fastMana: true, reason: "アンタップインから生け贄で無色2マナを生む直系バジェット2マナランド" } },
+        { id: "la8", en: "Command Tower", jp: "統率の塔", cat: "Lands", mv: 0, jpy: 100, landColors: ["U","B","R"] },
+        { id: "la9", en: "Flooded Strand", jp: "溢れかえる岸辺", cat: "Lands", mv: 0, jpy: 2200, landColors: ["U","B","R"],
+          rep: { en: "Snow-Covered Swamp", jp: "冠雪の沼", cat: "Lands", mv: 0, jpy: 150, landColors: ["B"], reason: "《沼》と別名のため《汚れた契約》を阻害しない無傷の黒マナ基本土地" } },
+        { id: "la10", en: "Forbidden Orchard", jp: "禁忌の果樹園", cat: "Lands", mv: 0, jpy: 1500, landColors: ["U","B","R"],
+          rep: { en: "Blackcleave Cliffs", jp: "黒割れの崖", cat: "Lands", mv: 0, jpy: 400, landColors: ["B","R"], reason: "3ターン目まで確定アンタップインする黒赤ファストランド" } },
+        { id: "la11", en: "Gemstone Caverns", jp: "宝石の洞窟", cat: "Lands", mv: 0, jpy: 9000, landColors: ["U","B","R"], fastMana: true,
+          rep: { en: "Gloomlake Verge", jp: "グルームレイクの境界", cat: "Lands", mv: 0, jpy: 1200, landColors: ["U","B"], reason: "無条件アンタップインで青を生み、島か沼があれば黒も出る境界ランド" } },
+        { id: "la12", en: "Gemstone Mine", jp: "宝石鉱山", cat: "Lands", mv: 0, jpy: 300, landColors: ["U","B","R"] },
+        { id: "la13", en: "Mana Confluence", jp: "マナの合流点", cat: "Lands", mv: 0, jpy: 5000, landColors: ["U","B","R"],
+          rep: { en: "Riverpyre Verge", jp: "リバーパイアーの境界", cat: "Lands", mv: 0, jpy: 1400, landColors: ["U","R"], reason: "無条件アンタップインで初動の赤マナを生み、島か山で青も出る境界ランド" } },
+        { id: "la14", en: "Marsh Flats", jp: "湿地の干潟", cat: "Lands", mv: 0, jpy: 4500, landColors: ["U","B","R"],
+          rep: { en: "Underground River", jp: "地底の大河", cat: "Lands", mv: 0, jpy: 300, landColors: ["U","B"], reason: "確定アンタップインの青黒ペインランド" } },
+        { id: "la15", en: "Misty Rainforest", jp: "霧深い雨林", cat: "Lands", mv: 0, jpy: 5000, landColors: ["U","B","R"],
+          rep: { en: "Shivan Reef", jp: "シヴの浅瀬", cat: "Lands", mv: 0, jpy: 200, landColors: ["U","R"], reason: "確定アンタップインの青赤ペインランド" } },
+        { id: "la16", en: "Otawara, Soaring City", jp: "天上都市、大田原", cat: "Lands", mv: 0, jpy: 4500, landColors: ["U"],
+          rep: { en: "Into the Flood Maw", jp: "洪水の大口へ", cat: "Instants", mv: 1, jpy: 300, reason: "Baumgartnerリスト採用。1マナ万能バウンスでクラーク下なら置物2枚を同時排除" } },
+        { id: "la17", en: "Phyrexian Tower", jp: "ファイレクシアの塔", cat: "Lands", mv: 0, jpy: 2400, landColors: ["B"], fastMana: true,
+          rep: { en: "Sulfur Falls", jp: "硫黄の滝", cat: "Lands", mv: 0, jpy: 250, landColors: ["U","R"], reason: "基本土地やショックランドと噛み合う青赤チェックランド" } },
+        { id: "la18", en: "Polluted Delta", jp: "汚染された三角州", cat: "Lands", mv: 0, jpy: 3000, landColors: ["U","B","R"],
+          rep: { en: "Blazemire Verge", jp: "ブレイズマイアの境界", cat: "Lands", mv: 0, jpy: 900, landColors: ["B","R"], reason: "無条件アンタップインで黒を生み、沼か山で赤も出る黒赤境界ランド" } },
+        { id: "la19", en: "Scalding Tarn", jp: "沸騰する小湖", cat: "Lands", mv: 0, jpy: 5000, landColors: ["U","B","R"],
+          rep: { en: "Sulfurous Springs", jp: "硫黄泉", cat: "Lands", mv: 0, jpy: 250, landColors: ["B","R"], reason: "確定アンタップインの黒赤ペインランド" } },
+        { id: "la20", en: "Starting Town", jp: "始まりの町", cat: "Lands", mv: 0, jpy: 2000, landColors: ["U","B","R"],
+          rep: { en: "Spirebluff Canal", jp: "尖塔断の運河", cat: "Lands", mv: 0, jpy: 600, landColors: ["U","R"], reason: "1〜3ターン目に無傷でアンタップインする青赤ファストランド" } },
+        { id: "la21", en: "Steam Vents", jp: "蒸気孔", cat: "Lands", mv: 0, jpy: 1300, landColors: ["U","R"],
+          rep: { en: "Cascade Bluffs", jp: "滝の断崖", cat: "Lands", mv: 0, jpy: 250, landColors: ["U","R"], reason: "タッサ(UU)やビビ(1UR)の色拘束を無傷で満たす青赤フィルターランド" } },
+        { id: "la22", en: "Underground Sea", jp: "Underground Sea", cat: "Lands", mv: 0, jpy: 280000, dual: true, rl: true, landColors: ["U","B"],
+          rep: { en: "Morphic Pool", jp: "変容する泉", cat: "Lands", mv: 0, jpy: 1800, landColors: ["U","B"], reason: "4人卓で確定アンタップインする青黒クラウドランド。Underground Seaの最有力代替" } },
+        { id: "la23", en: "Verdant Catacombs", jp: "新緑の地下墓地", cat: "Lands", mv: 0, jpy: 4200, landColors: ["U","B","R"],
+          rep: { en: "Swamp", jp: "沼", cat: "Lands", mv: 0, jpy: 50, landColors: ["B"], reason: "《汚れた契約》条件を守る1枚挿し基本沼" } },
+        { id: "la24", en: "Volcanic Island", jp: "Volcanic Island", cat: "Lands", mv: 0, jpy: 240000, dual: true, rl: true, landColors: ["U","R"],
+          rep: { en: "Training Center", jp: "訓練施設", cat: "Lands", mv: 0, jpy: 1200, landColors: ["U","R"], reason: "4人卓で確定アンタップインする青赤クラウドランド。Volcanic Islandの最有力代替" } },
+        { id: "la25", en: "Watery Grave", jp: "湿った墓", cat: "Lands", mv: 0, jpy: 1400, landColors: ["U","B"],
+          rep: { en: "Sunken Hollow", jp: "沈んだ虚ろ", cat: "Lands", mv: 0, jpy: 100, landColors: ["U","B"], reason: "島・沼タイプを持つ青黒バトルランド" } },
+        { id: "la26", en: "Wooded Foothills", jp: "樹木茂る山麓", cat: "Lands", mv: 0, jpy: 2500, landColors: ["U","B","R"],
+          rep: { en: "Snow-Covered Island", jp: "冠雪の島", cat: "Lands", mv: 0, jpy: 150, landColors: ["U"], reason: "《島》と別名のため《汚れた契約》を阻害せず島カウントを増やせる" } }
+      ];
+
+      const CAT_ORDER = ["Commanders", "Creatures", "Instants", "Sorceries", "Artifacts", "Enchantments", "Lands"];
+      const CAT_LABELS = {
+        Commanders: "統率者", Creatures: "クリーチャー", Instants: "インスタント",
+        Sorceries: "ソーサリー", Artifacts: "アーティファクト", Enchantments: "エンチャント", Lands: "土地"
+      };
+
+      const STORAGE_KEY = "saikura_iphone_v2";
+
+      let state = {
+        budgetCap: 330000,
+        cardCap: 50000,
+        noDuals: true,
+        noRL: true,
+        coreLock: true,
+        ownedIds: {},
+        manualMode: {},
+        catFilter: "ALL",
+        searchQuery: "",
+        stormCount: 0,
+        winFlips: 0
+      };
+
+      function loadStorage() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const p = JSON.parse(raw);
+            state = Object.assign(state, p);
+          }
+        } catch (_) {}
+      }
+
+      function saveStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            budgetCap: state.budgetCap,
+            cardCap: state.cardCap,
+            noDuals: state.noDuals,
+            noRL: state.noRL,
+            coreLock: state.coreLock,
+            ownedIds: state.ownedIds,
+            manualMode: state.manualMode
+          }));
+        } catch (_) {}
+      }
+
+      function encodeSaveCode() {
+        const payload = {
+          b: state.budgetCap,
+          c: state.cardCap,
+          d: state.noDuals ? 1 : 0,
+          r: state.noRL ? 1 : 0,
+          l: state.coreLock ? 1 : 0,
+          o: Object.keys(state.ownedIds),
+          m: state.manualMode
+        };
+        return "KS2:" + btoa(JSON.stringify(payload));
+      }
+
+      function decodeSaveCode(codeStr) {
+        const trimmed = (codeStr || "").trim();
+        if (!trimmed.startsWith("KS2:")) return false;
+        try {
+          const p = JSON.parse(atob(trimmed.slice(4)));
+          state.budgetCap = Number(p.b) || 330000;
+          state.cardCap = Number(p.c) || 50000;
+          state.noDuals = !!p.d;
+          state.noRL = !!p.r;
+          state.coreLock = !!p.l;
+          state.ownedIds = {};
+          (p.o || []).forEach(id => { state.ownedIds[id] = true; });
+          state.manualMode = p.m || {};
+          saveStorage();
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      function fmtYen(n) {
+        return "¥" + Math.round(n).toLocaleString("ja-JP");
+      }
+
+      function showToast(msg) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => el.classList.remove("show"), 2000);
+      }
+
+      function computeDeck() {
+        const fullBenchmark = BASE_DECK.reduce((s, c) => s + c.jpy, 0);
+        const dec = {};
+
+        BASE_DECK.forEach(card => {
+          const owned = !!state.ownedIds[card.id];
+          const manual = state.manualMode[card.id];
+          if (!card.rep) {
+            dec[card.id] = { swapped: false, tag: "確定コア" };
+          } else if (manual === "keep") {
+            dec[card.id] = { swapped: false, tag: "手動固定" };
+          } else if (manual === "swap") {
+            dec[card.id] = { swapped: true, tag: "手動除外" };
+          } else if (owned) {
+            dec[card.id] = { swapped: false, tag: "所持済" };
+          } else if (state.noDuals && card.dual) {
+            dec[card.id] = { swapped: true, tag: "デュアラン除外" };
+          } else if (state.noRL && card.rl) {
+            dec[card.id] = { swapped: true, tag: "RL除外" };
+          } else if (state.cardCap < 50000 && card.jpy > state.cardCap && !(state.coreLock && card.coreLock)) {
+            dec[card.id] = { swapped: true, tag: "単価超過" };
+          } else {
+            dec[card.id] = { swapped: false, tag: "採用" };
+          }
+        });
+
+        const getSum = () => {
+          let total = 0;
+          BASE_DECK.forEach(c => {
+            if (state.ownedIds[c.id] && !dec[c.id].swapped) return;
+            total += dec[c.id].swapped ? c.rep.jpy : c.jpy;
+          });
+          return total;
+        };
+
+        let currentTotal = getSum();
+        if (state.budgetCap < 1450000 && currentTotal > state.budgetCap) {
+          const cands = BASE_DECK.filter(c => {
+            if (!c.rep || dec[c.id].swapped || state.ownedIds[c.id]) return false;
+            if (state.manualMode[c.id] === "keep") return false;
+            if (state.coreLock && c.coreLock) return false;
+            return (c.jpy - c.rep.jpy) > 0;
+          }).sort((a, b) => (b.jpy - b.rep.jpy) - (a.jpy - a.rep.jpy));
+
+          for (let i = 0; i < cands.length; i++) {
+            if (currentTotal <= state.budgetCap) break;
+            const c = cands[i];
+            dec[c.id] = { swapped: true, tag: "予算最適化" };
+            currentTotal -= (c.jpy - c.rep.jpy);
+          }
+        }
+
+        const finalCards = [];
+        const swaps = [];
+        let ownedActiveCount = 0;
+
+        BASE_DECK.forEach(base => {
+          const d = dec[base.id];
+          const isOwned = !!state.ownedIds[base.id];
+          if (d.swapped) {
+            finalCards.push({
+              baseId: base.id,
+              en: base.rep.en,
+              jp: base.rep.jp,
+              cat: base.rep.cat,
+              mv: base.rep.mv,
+              jpy: base.rep.jpy,
+              outPocket: base.rep.jpy,
+              isRep: true,
+              origJp: base.jp,
+              origJpy: base.jpy,
+              reason: base.rep.reason,
+              landColors: base.rep.landColors || null,
+              fastMana: !!base.rep.fastMana,
+              engine: !!base.rep.engine,
+              tutor: !!base.rep.tutor,
+              zeroArt: !!base.rep.zeroArt
+            });
+            swaps.push({ base, rep: base.rep, tag: d.tag });
+          } else {
+            if (isOwned) ownedActiveCount++;
+            finalCards.push({
+              baseId: base.id,
+              en: base.en,
+              jp: base.jp,
+              cat: base.cat,
+              mv: base.mv,
+              jpy: base.jpy,
+              outPocket: isOwned ? 0 : base.jpy,
+              isRep: false,
+              isOwned: isOwned,
+              hasRep: !!base.rep,
+              rl: !!base.rl,
+              landColors: base.landColors || null,
+              fastMana: !!base.fastMana,
+              engine: !!base.engine,
+              tutor: !!base.tutor,
+              zeroArt: !!base.zeroArt
+            });
+          }
+        });
+
+        return {
+          finalCards,
+          swaps,
+          totalJpy: currentTotal,
+          savedJpy: fullBenchmark - currentTotal,
+          ownedActiveCount
+        };
+      }
+
+      function renderAll() {
+        const res = computeDeck();
+        const { finalCards, swaps, totalJpy, savedJpy, ownedActiveCount } = res;
+
+        document.getElementById("rngBudget").value = state.budgetCap;
+        document.getElementById("lblBudget").textContent = state.budgetCap >= 1450000 ? "上限なし" : fmtYen(state.budgetCap);
+        document.getElementById("rngCardCap").value = state.cardCap;
+        document.getElementById("lblCardCap").textContent = state.cardCap >= 50000 ? "上限なし" : fmtYen(state.cardCap);
+
+        document.getElementById("chkNoDuals").checked = state.noDuals;
+        document.getElementById("chkNoRL").checked = state.noRL;
+        document.getElementById("chkCoreLock").checked = state.coreLock;
+
+        const nonLands = finalCards.filter(c => c.cat !== "Lands" && c.cat !== "Commanders");
+        const avgMv = nonLands.reduce((s, c) => s + c.mv, 0) / nonLands.length;
+
+        const lands = finalCards.filter(c => c.cat === "Lands");
+        let u = 0, b = 0, r = 0;
+        lands.forEach(l => {
+          if (!l.landColors) return;
+          if (l.landColors.indexOf("U") >= 0) u++;
+          if (l.landColors.indexOf("B") >= 0) b++;
+          if (l.landColors.indexOf("R") >= 0) r++;
+        });
+
+        const uniq = new Set(finalCards.map(c => c.en));
+        const singletonOk = uniq.size === 100;
+
+        // Top Sticky Bar + KPIs
+        document.getElementById("hdrTotalCost").textContent = fmtYen(totalJpy);
+        document.getElementById("hdrSwapPill").textContent = "差替 " + swaps.length + "枚";
+        document.getElementById("hdrMvPill").textContent = "MV " + avgMv.toFixed(2);
+        document.getElementById("navSwapBadge").textContent = swaps.length;
+
+        document.getElementById("kpiCost").textContent = fmtYen(totalJpy);
+        document.getElementById("kpiSaved").textContent = "基準比 -" + fmtYen(savedJpy);
+        document.getElementById("kpiSwaps").textContent = swaps.length + "枚 / " + ownedActiveCount + "枚";
+        document.getElementById("kpiSingleton").textContent = singletonOk ? "100枚ハイランダー適合" : "重複あり注意";
+        document.getElementById("kpiMv").textContent = avgMv.toFixed(2);
+        const hasNaus = finalCards.some(c => c.en === "Ad Nauseam");
+        document.getElementById("kpiNaus").textContent = hasNaus ? "《むかつき》安全圏" : "《むかつき》除外・安定型";
+        document.getElementById("kpiColors").textContent = "青" + u + " / 黒" + b + " / 赤" + r;
+
+        // Diagnostics
+        const hasLED = finalCards.some(c => c.en === "Lion's Eye Diamond");
+        const hasStation = finalCards.some(c => c.en === "Grinding Station");
+        const zeroArts = finalCards.filter(c => c.zeroArt);
+        const over = state.budgetCap < 1450000 && totalJpy > state.budgetCap;
+
+        const diags = [];
+        if (over) {
+          diags.push({
+            cls: "diag-warn",
+            title: "予算上限を " + fmtYen(totalJpy - state.budgetCap) + " 超過中",
+            body: "「核エンジン6枚を優先保護」または手動固定により主要コンボパーツが保護されています。さらに削る場合は保護スイッチをOFFにしてください。"
+          });
+        } else {
+          diags.push({
+            cls: "diag-ok",
+            title: "予算クリア（購入総額 " + fmtYen(totalJpy) + "）",
+            body: "設定予算内で最も出力低下の少ない100枚が選択されています。"
+          });
+        }
+
+        diags.push({
+          cls: "diag-ok",
+          title: "《汚れた契約》100%適合（基本土地・冠雪土地分離済）",
+          body: "基本土地と冠雪基本土地を各1枚までに厳密分離しているため、1枚コンボの山札追放が途中で止まる事故は発生しません。"
+        });
+
+        if (hasLED) {
+          diags.push({
+            cls: "diag-info",
+            title: "《死の国からの脱出》：LED＋思考停止ルート搭載",
+            body: "フルパワーのLED脱出ループが稼働します。"
+          });
+        } else if (hasStation && zeroArts.length > 0) {
+          diags.push({
+            cls: "diag-ok",
+            title: "LED抜き自動補完：《研磨基地》＋0マナファクト(" + zeroArts.length + "枚)成立",
+            body: "《死の国からの脱出》＋《研磨基地》＋（" + zeroArts.map(z => z.jp).join("・") + " または太陽の指輪）で決定論的無限切削＆マナ生成が成立します。"
+          });
+        }
+
+        document.getElementById("diagContainer").innerHTML = diags.map(d =>
+          '<div class="diag-item ' + d.cls + '"><div class="diag-title">' + d.title + '</div><div class="sub-text" style="color:#e2e8f0;">' + d.body + '</div></div>'
+        ).join("");
+
+        renderSwaps(swaps);
+        renderDeckList(finalCards);
+      }
+
+      function renderSwaps(swaps) {
+        const el = document.getElementById("swapsList");
+        if (swaps.length === 0) {
+          el.innerHTML = '<div class="card"><p class="sub-text" style="text-align:center;">差し替えられているカードはありません（基準100枚リストそのままです）。</p></div>';
+          return;
+        }
+        const sorted = swaps.slice().sort((a, b) => (b.base.jpy - b.rep.jpy) - (a.base.jpy - a.rep.jpy));
+        el.innerHTML = sorted.map(item => {
+          const diff = item.base.jpy - item.rep.jpy;
+          return (
+            '<div class="swap-card">' +
+              '<div class="swap-top">' +
+                '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                  '<span class="swap-out">OUT: ' + item.base.jp + ' (' + fmtYen(item.base.jpy) + ')</span>' +
+                  '<span class="pill pill-green">-' + fmtYen(diff) + '</span>' +
+                '</div>' +
+                '<div class="swap-in">IN: ' + item.rep.jp + ' (' + fmtYen(item.rep.jpy) + ')</div>' +
+              '</div>' +
+              '<div class="swap-reason">' + item.rep.reason + '</div>' +
+              '<div class="swap-actions">' +
+                '<span class="pill">' + item.tag + '</span>' +
+                '<div style="display:flex; gap:6px;">' +
+                  '<button type="button" class="mini-action-btn" style="border-color:#10b981; color:#6ee7b7;" data-action="owned" data-id="' + item.base.id + '">所持(¥0)で復帰</button>' +
+                  '<button type="button" class="mini-action-btn" data-action="keep" data-id="' + item.base.id + '">無理して採用</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join("");
+      }
+
+      function renderDeckList(finalCards) {
+        const container = document.getElementById("deckListContainer");
+        const q = state.searchQuery.trim().toLowerCase();
+        const cf = state.catFilter;
+
+        let html = "";
+        CAT_ORDER.forEach(cat => {
+          if (cf !== "ALL" && cf !== "OWNED" && cf !== cat) return;
+          const group = finalCards.filter(c => c.cat === cat).filter(c => {
+            if (cf === "OWNED" && !state.ownedIds[c.baseId]) return false;
+            if (!q) return true;
+            return c.jp.toLowerCase().indexOf(q) >= 0 ||
+                   c.en.toLowerCase().indexOf(q) >= 0 ||
+                   (c.origJp && c.origJp.toLowerCase().indexOf(q) >= 0);
+          });
+          if (group.length === 0) return;
+
+          const subTotal = group.reduce((s, c) => s + c.outPocket, 0);
+          html += '<div class="deck-group-header"><span>' + CAT_LABELS[cat] + ' (' + group.length + '枚)</span><span>小計 ' + fmtYen(subTotal) + '</span></div>';
+
+          group.forEach(card => {
+            const isOwned = !!state.ownedIds[card.baseId];
+            const manual = state.manualMode[card.baseId];
+            const tagBadge = card.isRep
+              ? '<span class="pill pill-blue" style="font-size:10px; padding:1px 6px;">元:' + card.origJp + '</span>'
+              : (card.rl ? '<span class="pill pill-amber" style="font-size:10px; padding:1px 6px;">RL</span>' : '');
+
+            let actionBtn = "";
+            if (card.isRep) {
+              actionBtn = '<button type="button" class="mini-action-btn" data-action="keep" data-id="' + card.baseId + '">元に戻す</button>';
+            } else if (card.hasRep && cat !== "Commanders") {
+              actionBtn = '<button type="button" class="mini-action-btn" data-action="swap" data-id="' + card.baseId + '">' +
+                (manual === "keep" ? "固定解除" : "安価枠へ") + '</button>';
+            }
+
+            html += (
+              '<div class="deck-item">' +
+                '<div class="deck-item-left">' +
+                  '<label class="owned-check-wrap">' +
+                    '<input type="checkbox" ' + (isOwned ? 'checked' : '') + ' data-action="owned" data-id="' + card.baseId + '" />' +
+                    '<span>所持</span>' +
+                  '</label>' +
+                  '<div class="card-main-info">' +
+                    '<div class="card-jp">' + card.jp + ' ' + tagBadge + '</div>' +
+                    '<div class="card-en">' + card.en + '</div>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="deck-item-right">' +
+                  '<span class="card-price" style="color:' + (card.outPocket === 0 ? '#6ee7b7' : '#f1f5f9') + ';">' +
+                    (card.outPocket === 0 ? '¥0 (所持)' : fmtYen(card.jpy)) +
+                  '</span>' +
+                  actionBtn +
+                '</div>' +
+              '</div>'
+            );
+          });
+        });
+
+        container.innerHTML = html || '<div class="card"><p class="sub-text" style="text-align:center;">該当するカードがありません。</p></div>';
+      }
+
+      function drawHand() {
+        const { finalCards } = computeDeck();
+        const pool = finalCards.filter(c => c.cat !== "Commanders").slice();
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+        }
+        const hand = pool.slice(0, 7);
+        const lands = hand.filter(c => c.cat === "Lands").length;
+        const fast = hand.filter(c => c.fastMana).length;
+        const hasRed = hand.some(c => c.landColors && c.landColors.indexOf("R") >= 0);
+        const eng = hand.filter(c => c.engine || c.tutor).length;
+
+        const vEl = document.getElementById("handVerdict");
+        if (lands >= 2 && lands <= 4 && hasRed && (eng >= 1 || fast >= 1)) {
+          vEl.className = "diag-item diag-ok";
+          vEl.innerHTML = '<div class="diag-title">推奨判定：【キープ圏内】</div><div class="sub-text" style="color:#e2e8f0;">土地' + lands + '枚(赤あり)・加速' + fast + '枚・エンジン/サーチ' + eng + '枚。安定した1〜2T展開が見込めます。</div>';
+        } else if (lands >= 1 && fast >= 2 && eng >= 1) {
+          vEl.className = "diag-item diag-info";
+          vEl.innerHTML = '<div class="diag-title">推奨判定：【高速キープ】</div><div class="sub-text" style="color:#e2e8f0;">土地' + lands + '枚＋高速マナ' + fast + '枚＋エンジン/サーチ' + eng + '枚で早期仕掛けが狙えます。</div>';
+        } else {
+          vEl.className = "diag-item diag-warn";
+          vEl.innerHTML = '<div class="diag-title">推奨判定：【マリガン推奨】</div><div class="sub-text" style="color:#e2e8f0;">土地' + lands + '枚・加速' + fast + '枚・エンジン/サーチ' + eng + '枚。初動色または後続エンジンが不足しています。</div>';
+        }
+
+        document.getElementById("handGrid").innerHTML = hand.map(c =>
+          '<div class="hand-card-row"><div><strong>' + c.jp + '</strong><span style="display:block; font-size:11px; color:var(--muted);">' + CAT_LABELS[c.cat] + '</span></div><span class="pill">' + fmtYen(c.jpy) + '</span></div>'
+        ).join("");
+      }
+
+      // Krarkulator Coin Flip Logic
+      function runKrarkFlip() {
+        const n = Number(document.getElementById("selTriggers").value) || 1;
+        const mode = document.getElementById("selThumbMode").value;
+        state.stormCount += 1;
+
+        let copies = 0;
+        let bounced = false;
+        const logs = [];
+
+        for (let i = 1; i <= n; i++) {
+          if (mode === "none") {
+            const win = Math.random() < 0.5;
+            if (win) { copies++; state.winFlips++; logs.push("誘発" + i + ":表(コピー)"); }
+            else { bounced = true; logs.push("誘発" + i + ":裏(回収)"); }
+          } else {
+            const c1 = Math.random() < 0.5;
+            const c2 = Math.random() < 0.5;
+            let chosenWin = false;
+            if (c1 && c2) {
+              chosenWin = true;
+            } else if (!c1 && !c2) {
+              chosenWin = false;
+            } else {
+              // Mixed (Heads + Tails): player chooses!
+              if (mode === "copy") {
+                chosenWin = true;
+              } else {
+                // Optimal loop choice: get 1 copy first, then 1 bounce, then all extra copies
+                if (copies === 0) chosenWin = true;
+                else if (!bounced) chosenWin = false;
+                else chosenWin = true;
+              }
+            }
+            if (chosenWin) {
+              copies++;
+              state.winFlips++;
+              logs.push("誘発" + i + ":勝[" + (c1 ? "表" : "裏") + "/" + (c2 ? "表" : "裏") + "]");
+            } else {
+              bounced = true;
+              logs.push("誘発" + i + ":負[" + (c1 ? "表" : "裏") + "/" + (c2 ? "表" : "裏") + "]");
+            }
+          }
+        }
+
+        document.getElementById("lblStormCount").textContent = state.stormCount;
+        document.getElementById("lblWinFlips").textContent = state.winFlips + " (宝物" + (state.winFlips * 2) + "個)";
+
+        let summary = "";
+        if (copies > 0 && bounced) {
+          summary = "【ループ成立！】コピー " + copies + "回解決 ＋ 本体は手札へ回収";
+        } else if (copies > 0 && !bounced) {
+          summary = "【全勝解決】コピー " + copies + "回 ＋ 本体も解決（計" + (copies + 1) + "回効果）";
+        } else {
+          summary = "【不発・回収のみ】コピー0回・本体を手札へ戻す";
+        }
+
+        document.getElementById("flipDetailText").innerHTML =
+          summary + '<div style="font-size:11px; font-weight:400; color:var(--muted); margin-top:4px;">' + logs.join(" / ") + '</div>';
+      }
+
+      // Robust Copy helper for iOS
+      function copyTextRobust(text, toastMsg) {
+        const area = document.getElementById("txtExport");
+        area.value = text;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            showToast(toastMsg);
+          }).catch(() => {
+            fallbackSelectCopy(area, toastMsg);
+          });
+        } else {
+          fallbackSelectCopy(area, toastMsg);
+        }
+      }
+
+      function fallbackSelectCopy(area, toastMsg) {
+        area.focus();
+        area.select();
+        area.setSelectionRange(0, 999999);
+        try {
+          const ok = document.execCommand("copy");
+          showToast(ok ? toastMsg : "下の枠からコピーしてください");
+        } catch (_) {
+          showToast("下の枠にテキストを出力しました");
+        }
+      }
+
+      // Delegated Event Listeners
+      document.addEventListener("click", function (e) {
+        const navBtn = e.target.closest(".nav-btn");
+        if (navBtn) {
+          const tab = navBtn.getAttribute("data-tab");
+          document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b === navBtn));
+          document.querySelectorAll(".tab-view").forEach(v => v.classList.remove("active"));
+          document.getElementById("view-" + tab).classList.add("active");
+          window.scrollTo(0, 0);
+          return;
+        }
+
+        const presetBtn = e.target.closest(".preset-btn");
+        if (presetBtn) {
+          document.querySelectorAll(".preset-btn").forEach(b => b.classList.toggle("selected", b === presetBtn));
+          const p = presetBtn.getAttribute("data-preset");
+          state.manualMode = {};
+          if (p === "notier") {
+            state.budgetCap = 1450000; state.cardCap = 50000; state.noDuals = false; state.noRL = false; state.coreLock = true;
+          } else if (p === "norl") {
+            state.budgetCap = 350000; state.cardCap = 50000; state.noDuals = true; state.noRL = true; state.coreLock = true;
+          } else if (p === "comp20") {
+            state.budgetCap = 195000; state.cardCap = 11500; state.noDuals = true; state.noRL = true; state.coreLock = true;
+          } else if (p === "mid10") {
+            state.budgetCap = 105000; state.cardCap = 4500; state.noDuals = true; state.noRL = true; state.coreLock = true;
+          } else if (p === "entry5") {
+            state.budgetCap = 55000; state.cardCap = 3000; state.noDuals = true; state.noRL = true; state.coreLock = false;
+          }
+          saveStorage();
+          renderAll();
+          drawHand();
+          showToast("プリセットを適用しました");
+          return;
+        }
+
+        const stepBtn = e.target.closest("[data-step-budget]");
+        if (stepBtn) {
+          const delta = Number(stepBtn.getAttribute("data-step-budget"));
+          state.budgetCap = Math.max(48000, Math.min(1450000, state.budgetCap + delta));
+          saveStorage();
+          renderAll();
+          return;
+        }
+
+        const capBtn = e.target.closest("[data-set-cap]");
+        if (capBtn) {
+          state.cardCap = Number(capBtn.getAttribute("data-set-cap"));
+          saveStorage();
+          renderAll();
+          return;
+        }
+
+        const chipBtn = e.target.closest(".chip-btn");
+        if (chipBtn) {
+          state.catFilter = chipBtn.getAttribute("data-cat");
+          document.querySelectorAll(".chip-btn").forEach(c => c.classList.toggle("active", c === chipBtn));
+          renderDeckList(computeDeck().finalCards);
+          return;
+        }
+
+        const actEl = e.target.closest("[data-action]");
+        if (actEl && actEl.tagName !== "INPUT") {
+          const act = actEl.getAttribute("data-action");
+          const id = actEl.getAttribute("data-id");
+          if (act === "owned") {
+            if (state.ownedIds[id]) delete state.ownedIds[id];
+            else { state.ownedIds[id] = true; delete state.manualMode[id]; }
+          } else if (act === "keep") {
+            if (state.manualMode[id] === "keep") delete state.manualMode[id];
+            else state.manualMode[id] = "keep";
+          } else if (act === "swap") {
+            if (state.manualMode[id] === "keep") delete state.manualMode[id];
+            else state.manualMode[id] = "swap";
+          }
+          saveStorage();
+          renderAll();
+        }
+      });
+
+      document.addEventListener("change", function (e) {
+        if (e.target.matches('input[data-action="owned"]')) {
+          const id = e.target.getAttribute("data-id");
+          if (e.target.checked) {
+            state.ownedIds[id] = true;
+            if (state.manualMode[id] === "swap") delete state.manualMode[id];
+          } else {
+            delete state.ownedIds[id];
+          }
+          saveStorage();
+          renderAll();
+          return;
+        }
+        if (e.target.id === "chkNoDuals") { state.noDuals = e.target.checked; saveStorage(); renderAll(); }
+        if (e.target.id === "chkNoRL") {
+          state.noRL = e.target.checked;
+          if (state.noRL) state.noDuals = true;
+          saveStorage(); renderAll();
+        }
+        if (e.target.id === "chkCoreLock") { state.coreLock = e.target.checked; saveStorage(); renderAll(); }
+      });
+
+      document.getElementById("rngBudget").addEventListener("input", function (e) {
+        state.budgetCap = Number(e.target.value);
+        saveStorage();
+        renderAll();
+      });
+
+      document.getElementById("rngCardCap").addEventListener("input", function (e) {
+        state.cardCap = Number(e.target.value);
+        saveStorage();
+        renderAll();
+      });
+
+      document.getElementById("inpSearch").addEventListener("input", function (e) {
+        state.searchQuery = e.target.value;
+        renderDeckList(computeDeck().finalCards);
+      });
+
+      document.getElementById("btnCastFlip").addEventListener("click", runKrarkFlip);
+      document.getElementById("btnResetStorm").addEventListener("click", function () {
+        state.stormCount = 0;
+        state.winFlips = 0;
+        document.getElementById("lblStormCount").textContent = "0";
+        document.getElementById("lblWinFlips").textContent = "0";
+        document.getElementById("flipDetailText").textContent = "ストームとコイントス履歴をリセットしました";
+      });
+
+      document.getElementById("btnDrawHand").addEventListener("click", drawHand);
+
+      document.getElementById("btnOutMoxfield").addEventListener("click", function () {
+        const { finalCards } = computeDeck();
+        const txt = finalCards.map(c => "1 " + c.en).join("\n");
+        copyTextRobust(txt, "Moxfield用100枚リストを出力＆コピーしました");
+      });
+
+      document.getElementById("btnOutShopping").addEventListener("click", function () {
+        const { finalCards, totalJpy } = computeDeck();
+        const need = finalCards.filter(c => c.outPocket > 0);
+        const header = "【サイクラ未所持買い物リスト (" + need.length + "枚 / 合計 " + fmtYen(totalJpy) + ")】\n";
+        const body = need.map(c => "□ " + c.jp + " / " + c.en + " (" + fmtYen(c.jpy) + ")").join("\n");
+        copyTextRobust(header + body, "未所持カードの買い物リストを出力＆コピーしました");
+      });
+
+      document.getElementById("btnSelectAll").addEventListener("click", function () {
+        const area = document.getElementById("txtExport");
+        if (!area.value) {
+          const { finalCards } = computeDeck();
+          area.value = finalCards.map(c => "1 " + c.en).join("\n");
+        }
+        fallbackSelectCopy(area, "テキストを全選択＆コピーしました");
+      });
+
+      document.getElementById("btnShareIOS").addEventListener("click", function () {
+        const area = document.getElementById("txtExport");
+        if (!area.value) {
+          const { finalCards, totalJpy } = computeDeck();
+          const need = finalCards.filter(c => c.outPocket > 0);
+          area.value = "【サイクラ買い物リスト (" + need.length + "枚 / " + fmtYen(totalJpy) + ")】\n" +
+            need.map(c => "1 " + c.jp + " (" + fmtYen(c.jpy) + ")").join("\n");
+        }
+        if (navigator.share) {
+          navigator.share({ title: "サイクラ最適化リスト", text: area.value }).catch(() => {});
+        } else {
+          fallbackSelectCopy(area, "共有非対応のためコピーしました");
+        }
+      });
+
+      document.getElementById("btnGenerateCode").addEventListener("click", function () {
+        const code = encodeSaveCode();
+        const inp = document.getElementById("inpSaveCode");
+        inp.value = code;
+        copyTextRobust(code, "セーブコードを生成＆コピーしました");
+      });
+
+      document.getElementById("btnLoadCode").addEventListener("click", function () {
+        const inp = document.getElementById("inpSaveCode");
+        if (decodeSaveCode(inp.value)) {
+          renderAll();
+          drawHand();
+          showToast("セーブコードから設定・所持状況を復元しました！");
+        } else {
+          showToast("有効なセーブコード(KS2:...)を入力してください");
+        }
+      });
+
+      document.getElementById("btnResetState").addEventListener("click", function () {
+        state.ownedIds = {};
+        state.manualMode = {};
+        state.budgetCap = 330000;
+        state.cardCap = 50000;
+        state.noDuals = true;
+        state.noRL = true;
+        state.coreLock = true;
+        saveStorage();
+        renderAll();
+        drawHand();
+        showToast("初期状態にリセットしました");
+      });
+
+      // Boot
+      loadStorage();
+      renderAll();
+      drawHand();
+    })();
+  </script>
+</body>
+</html>
